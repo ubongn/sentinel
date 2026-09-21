@@ -1,0 +1,126 @@
+import { useState } from "react";
+import { useSentinel } from "../hooks/useSentinel";
+import { MONAD_EXPLORER } from "../config/contracts";
+
+export function AgentManagement() {
+  const { registerAgent, setPolicyForAgent, pauseAgent, unpauseAgent, loading, error } = useSentinel();
+  const [agentAddress, setAgentAddress] = useState("");
+  const [policyId, setPolicyId] = useState("");
+  const [metadata, setMetadata] = useState("");
+  const [action, setAction] = useState<"register" | "assign" | "pause" | "unpause">("register");
+  const [result, setResult] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      let txHash: string;
+      switch (action) {
+        case "register":
+          const policyHash = `0x${"0".repeat(64)}`; // placeholder — real policy hash from chain
+          txHash = await registerAgent(agentAddress, policyHash, metadata);
+          break;
+        case "assign":
+          txHash = await setPolicyForAgent(agentAddress, BigInt(policyId));
+          break;
+        case "pause":
+          txHash = await pauseAgent(agentAddress);
+          break;
+        case "unpause":
+          txHash = await unpauseAgent(agentAddress);
+          break;
+        default: return;
+      }
+      setResult(txHash);
+    } catch {}
+  }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1>Agent Management</h1>
+        <p>Register agents, assign policies, and control agent activity.</p>
+      </div>
+
+      <div className="action-tabs">
+        {(["register", "assign", "pause", "unpause"] as const).map(a => (
+          <button
+            key={a}
+            className={`tab ${action === a ? "active" : ""}`}
+            onClick={() => { setAction(a); setResult(null); }}
+          >
+            {a.charAt(0).toUpperCase() + a.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {result ? (
+        <div className="success-card">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" stroke="#10B981" strokeWidth="2" fill="none"/>
+            <path d="M16 24l5 5 11-11" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <h2>Transaction Successful</h2>
+          <p className="mono">
+            <a href={`${MONAD_EXPLORER}/tx/${result}`} target="_blank" rel="noopener noreferrer">
+              {result.slice(0, 18)}...
+            </a>
+          </p>
+          <button className="btn btn-secondary" onClick={() => setResult(null)}>Continue</button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="policy-form">
+          <div className="form-group">
+            <label htmlFor="agentAddress">Agent Address</label>
+            <input
+              type="text" id="agentAddress"
+              value={agentAddress} onChange={e => setAgentAddress(e.target.value)}
+              placeholder="0x..." required
+            />
+          </div>
+
+          {action === "register" && (
+            <div className="form-group">
+              <label htmlFor="metadata">Agent Metadata (optional)</label>
+              <input
+                type="text" id="metadata"
+                value={metadata} onChange={e => setMetadata(e.target.value)}
+                placeholder='{"name":"My Agent","description":"Trading bot"}'
+              />
+            </div>
+          )}
+
+          {action === "assign" && (
+            <div className="form-group">
+              <label htmlFor="policyId">Policy ID</label>
+              <input
+                type="number" id="policyId"
+                value={policyId} onChange={e => setPolicyId(e.target.value)}
+                min="1" required
+              />
+            </div>
+          )}
+
+          {(action === "pause" || action === "unpause") && (
+            <div className="warning-card">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 9v4M12 17h.01" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#F59E0B" strokeWidth="2" fill="none"/>
+              </svg>
+              <p>
+                {action === "pause"
+                  ? "Pausing will immediately halt all agent transactions."
+                  : "Unpausing will allow the agent to resume executing transactions."}
+              </p>
+            </div>
+          )}
+
+          {error && <div className="error-message">{error}</div>}
+
+          <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+            {loading ? "Processing..." : `${action.charAt(0).toUpperCase() + action.slice(1)} Agent`}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
