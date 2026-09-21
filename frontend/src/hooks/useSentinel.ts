@@ -1,14 +1,12 @@
 import { useState, useCallback } from "react";
 import { ethers } from "ethers";
 import { CONTRACTS, MONAD_RPC } from "../config/contracts";
+import { useWallet } from "../context/WalletContext";
 import RegistryAbi from "../abi/SentinelRegistry.json";
 import GuardAbi from "../abi/SentinelGuard.json";
 import P256Abi from "../abi/P256PolicyAuth.json";
 
-function getProvider() {
-  if (typeof window !== "undefined" && (window as any).ethereum) {
-    return new ethers.BrowserProvider((window as any).ethereum);
-  }
+function getReadProvider() {
   return new ethers.JsonRpcProvider(MONAD_RPC);
 }
 
@@ -42,14 +40,15 @@ export interface PolicyInfo {
 }
 
 export function useSentinel() {
+  const { provider: walletProvider } = useWallet();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const getSigner = useCallback(async () => {
-    const provider = getProvider();
-    if (!("getSigner" in provider)) throw new Error("No wallet connected");
-    return (provider as ethers.BrowserProvider).getSigner();
-  }, []);
+    if (!walletProvider) throw new Error("No wallet connected — click Connect Wallet first");
+    const browserProvider = new ethers.BrowserProvider(walletProvider);
+    return browserProvider.getSigner();
+  }, [walletProvider]);
 
   // ── Registry ──
 
@@ -65,19 +64,19 @@ export function useSentinel() {
   }, [getSigner]);
 
   const getAgent = useCallback(async (address: string): Promise<AgentInfo> => {
-    const provider = getProvider();
+    const provider = getReadProvider();
     const { registry } = getContracts(provider);
     return registry.getAgent(address);
   }, []);
 
   const getAllAgents = useCallback(async (offset = 0, limit = 50): Promise<string[]> => {
-    const provider = getProvider();
+    const provider = getReadProvider();
     const { registry } = getContracts(provider);
     return registry.getAgentsPaginated(offset, limit);
   }, []);
 
   const getAgentCount = useCallback(async (): Promise<bigint> => {
-    const provider = getProvider();
+    const provider = getReadProvider();
     const { registry } = getContracts(provider);
     return registry.getAgentCount();
   }, []);
@@ -132,7 +131,7 @@ export function useSentinel() {
   }, [getSigner]);
 
   const getPolicy = useCallback(async (policyId: bigint): Promise<PolicyInfo> => {
-    const provider = getProvider();
+    const provider = getReadProvider();
     const { guard } = getContracts(provider);
     return guard.getPolicy(policyId);
   }, []);
@@ -160,7 +159,7 @@ export function useSentinel() {
   }, [getSigner]);
 
   const canExecute = useCallback(async (agent: string, to: string, value: string) => {
-    const provider = getProvider();
+    const provider = getReadProvider();
     const { guard } = getContracts(provider);
     return guard.canExecute(agent, to, ethers.parseEther(value));
   }, []);
@@ -168,7 +167,7 @@ export function useSentinel() {
   // ── Events ──
 
   const getRecentEvents = useCallback(async (fromBlock = -1000) => {
-    const provider = getProvider();
+    const provider = getReadProvider();
     const { guard, registry } = getContracts(provider);
     const currentBlock = await provider.getBlockNumber();
     const startBlock = Math.max(0, currentBlock + fromBlock);

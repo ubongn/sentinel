@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { useWallet } from "../context/WalletContext";
 
-interface WalletProvider {
+interface WalletProviderInfo {
   info: { uuid: string; name: string; icon: string; rdns: string };
   provider: any;
 }
@@ -10,14 +11,14 @@ interface WalletProvider {
  * Shows all installed wallets in a dropdown — MetaMask, OKX, Coinbase, etc.
  */
 export function ConnectButton() {
-  const [address, setAddress] = useState<string | null>(null);
+  const { address, setWallet, disconnect } = useWallet();
   const [connecting, setConnecting] = useState(false);
-  const [wallets, setWallets] = useState<WalletProvider[]>([]);
+  const [wallets, setWallets] = useState<WalletProviderInfo[]>([]);
   const [showSelector, setShowSelector] = useState(false);
 
   // EIP-6963: detect all installed wallets
   useEffect(() => {
-    const discovered: WalletProvider[] = [];
+    const discovered: WalletProviderInfo[] = [];
 
     function onAnnouncement(event: Event) {
       const detail = (event as CustomEvent).detail;
@@ -35,13 +36,15 @@ export function ConnectButton() {
     };
   }, []);
 
-  // Check if already connected
+  // Check if already connected (page refresh)
   useEffect(() => {
     if (typeof window === "undefined" || !(window as any).ethereum) return;
     (window as any).ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-      if (accounts?.length > 0) setAddress(accounts[0]);
+      if (accounts?.length > 0) {
+        setWallet((window as any).ethereum, accounts[0]);
+      }
     }).catch(() => {});
-  }, []);
+  }, [setWallet]);
 
   const switchToMonad = useCallback(async (provider: any) => {
     try {
@@ -65,14 +68,14 @@ export function ConnectButton() {
     }
   }, []);
 
-  async function connectWallet(wallet: WalletProvider) {
+  async function connectWallet(wallet: WalletProviderInfo) {
     setConnecting(true);
     setShowSelector(false);
     try {
       await switchToMonad(wallet.provider);
       const accounts = await wallet.provider.request({ method: "eth_requestAccounts" });
       if (accounts?.length > 0) {
-        setAddress(accounts[0]);
+        setWallet(wallet.provider, accounts[0]);
       }
     } catch (err: any) {
       console.error("Connection failed:", err);
@@ -81,7 +84,7 @@ export function ConnectButton() {
     }
   }
 
-  // Fallback: connect via window.ethereum (any wallet)
+  // Fallback: connect via window.ethereum
   async function connectFallback() {
     if (typeof window === "undefined" || !(window as any).ethereum) {
       alert("No wallet detected. Install MetaMask, OKX, or Coinbase Wallet.");
@@ -92,16 +95,14 @@ export function ConnectButton() {
     try {
       await switchToMonad((window as any).ethereum);
       const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-      if (accounts?.length > 0) setAddress(accounts[0]);
+      if (accounts?.length > 0) {
+        setWallet((window as any).ethereum, accounts[0]);
+      }
     } catch (err: any) {
       console.error("Connection failed:", err);
     } finally {
       setConnecting(false);
     }
-  }
-
-  function disconnect() {
-    setAddress(null);
   }
 
   // Connected state
