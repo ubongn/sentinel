@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useSentinel, AgentInfo } from "../hooks/useSentinel";
+import { useSentinel } from "../hooks/useSentinel";
+import type { AgentInfo } from "../hooks/useSentinel";
 import { MONAD_EXPLORER } from "../config/contracts";
 
 export function Dashboard() {
