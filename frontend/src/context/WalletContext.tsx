@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 
+const STORAGE_KEY = "sentinel_wallet_rdns";
+
 interface WalletContextType {
   provider: any | null;
   address: string | null;
-  setWallet: (provider: any, address: string) => void;
+  setWallet: (provider: any, address: string, rdns?: string) => void;
   disconnect: () => void;
 }
 
@@ -17,24 +19,36 @@ const WalletContext = createContext<WalletContextType>({
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [provider, setProvider] = useState<any | null>(null);
   const [address, setAddress] = useState<string | null>(null);
+  const [savedRdns, setSavedRdns] = useState<string | null>(
+    () => localStorage.getItem(STORAGE_KEY)
+  );
 
-  const setWallet = useCallback((prov: any, addr: string) => {
+  const setWallet = useCallback((prov: any, addr: string, rdns?: string) => {
     setProvider(prov);
     setAddress(addr);
+    if (rdns) {
+      localStorage.setItem(STORAGE_KEY, rdns);
+      setSavedRdns(rdns);
+    }
   }, []);
 
   const disconnect = useCallback(() => {
     setProvider(null);
     setAddress(null);
+    localStorage.removeItem(STORAGE_KEY);
+    setSavedRdns(null);
   }, []);
 
+  // Expose savedRdns for ConnectButton to use on reconnect
+  const value = { provider, address, setWallet, disconnect, savedRdns };
+
   return (
-    <WalletContext.Provider value={{ provider, address, setWallet, disconnect }}>
+    <WalletContext.Provider value={value as any}>
       {children}
     </WalletContext.Provider>
   );
 }
 
 export function useWallet() {
-  return useContext(WalletContext);
+  return useContext(WalletContext) as WalletContextType & { savedRdns: string | null };
 }
