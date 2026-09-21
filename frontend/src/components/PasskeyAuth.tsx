@@ -62,6 +62,7 @@ export function PasskeyAuth({ onSuccess }: PasskeyAuthProps) {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function signWithPasskey(policyHash: string) {
     if (!credentialId) return;
     setStatus("signing");

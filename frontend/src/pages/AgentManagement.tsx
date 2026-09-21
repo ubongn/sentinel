@@ -12,6 +12,7 @@ export function AgentManagement() {
   const [action, setAction] = useState<"register" | "assign" | "pause" | "unpause">("register");
   const [result, setResult] = useState<string | null>(null);
   const [cleanverseVerified, setCleanverseVerified] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [passkeyRegistered, setPasskeyRegistered] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
