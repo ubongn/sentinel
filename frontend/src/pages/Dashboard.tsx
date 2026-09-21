@@ -31,11 +31,23 @@ export function Dashboard() {
       const addresses = await getAllAgents(0, 50);
       const infos = await Promise.all(
         addresses.map(async (addr: string) => {
-          const info = await getAgent(addr);
-          return { ...info, address: addr };
+          try {
+            const info = await getAgent(addr);
+            return {
+              owner: info.owner || "",
+              policyHash: info.policyHash || "",
+              registeredAt: info.registeredAt || 0n,
+              updatedAt: info.updatedAt || 0n,
+              active: info.active ?? false,
+              metadata: info.metadata || "",
+              address: addr,
+            };
+          } catch {
+            return null;
+          }
         })
       );
-      setAgents(infos.filter(a => a.owner !== "0x0000000000000000000000000000000000000000"));
+      setAgents(infos.filter((a): a is NonNullable<typeof a> => a !== null && a.owner !== "0x0000000000000000000000000000000000000000"));
     } catch (e) {
       console.error("Failed to load agents:", e);
     } finally {
@@ -103,11 +115,11 @@ export function Dashboard() {
                 <div className="agent-card-body">
                   <div className="agent-field">
                     <span className="field-label">Owner</span>
-                    <span className="field-value">{agent.owner.slice(0, 6)}...{agent.owner.slice(-4)}</span>
+                    <span className="field-value">{agent.owner ? `${agent.owner.slice(0, 6)}...${agent.owner.slice(-4)}` : "—"}</span>
                   </div>
                   <div className="agent-field">
                     <span className="field-label">Policy Hash</span>
-                    <span className="field-value mono">{agent.policyHash.slice(0, 18)}...</span>
+                    <span className="field-value mono">{agent.policyHash ? `${agent.policyHash.slice(0, 18)}...` : "—"}</span>
                   </div>
                   {agent.metadata && (
                     <div className="agent-field">

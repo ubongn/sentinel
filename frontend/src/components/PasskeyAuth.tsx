@@ -44,7 +44,9 @@ export function PasskeyAuth({ onSuccess }: PasskeyAuthProps) {
         return;
       }
 
-      const rawId = Buffer.from(credential.rawId).toString("hex");
+      const rawId = Array.from(new Uint8Array(credential.rawId))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
       setCredentialId(rawId);
       setStatus("registered");
 
