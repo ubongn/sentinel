@@ -62,40 +62,6 @@ export function PasskeyAuth({ onSuccess }: PasskeyAuthProps) {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async function signWithPasskey(policyHash: string) {
-    if (!credentialId) return;
-    setStatus("signing");
-    try {
-      const challenge = new TextEncoder().encode(policyHash);
-
-      const assertion = await navigator.credentials.get({
-        publicKey: {
-          challenge,
-          rpId: window.location.hostname,
-          userVerification: "required",
-          timeout: 60000,
-        },
-      }) as PublicKeyCredential | null;
-
-      if (!assertion) {
-        setStatus("registered");
-        return;
-      }
-
-      const response = assertion.response as AuthenticatorAssertionResponse;
-      const signature = new Uint8Array(response.signature);
-      // In production: construct r,s from DER-encoded P256 signature
-      // and call P256PolicyAuth.authorizePolicyChange(credentialId, policyHash, sig, nonce, timestamp)
-      console.log("Signed policy hash:", policyHash, "signature length:", signature.length);
-
-      setStatus("signed");
-    } catch (err: any) {
-      console.error("Signing failed:", err);
-      setStatus("registered");
-    }
-  }
-
   return (
     <div className="passkey-auth">
       <div className="passkey-header">

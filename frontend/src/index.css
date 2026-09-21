@@ -175,6 +175,31 @@ a:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-sm);
 }
+.connect-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.wallet-connected {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--green-50);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(34,197,94,0.2);
+}
+.wallet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green-500);
+}
+.wallet-address {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  color: var(--green-700);
+}
 @media (max-width: 768px) {
   .navbar-links { display: none; }
   .navbar-inner { padding: 0 16px; }
