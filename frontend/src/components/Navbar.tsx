@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const NAV_ITEMS = [
@@ -12,7 +11,6 @@ const NAV_ITEMS = [
 
 export function Navbar() {
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <nav className="navbar">

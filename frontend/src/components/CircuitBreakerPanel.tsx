@@ -43,9 +43,10 @@ export function CircuitBreakerPanel({ agents }: CircuitBreakerPanelProps) {
           // Sum spending in the last hour for this agent
           let hourSpend = 0;
           for (const ev of events) {
-            if (ev.fragment?.name === "TransactionExecuted" && ev.args) {
-              const agent = ev.args[0];
-              const value = ev.args[2];
+            const evAny = ev as any;
+            if (evAny.fragment?.name === "TransactionExecuted" && evAny.args) {
+              const agent = evAny.args[0];
+              const value = evAny.args[2];
               if (agent.toLowerCase() === rule.agentAddress.toLowerCase()) {
                 const block = await ev.getBlock();
                 if (block.timestamp >= hourAgo) {

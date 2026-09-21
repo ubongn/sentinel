@@ -1,6 +1,6 @@
 import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 const DYNAMIC_ENVIRONMENT_ID = import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID || "";
 
@@ -15,24 +15,6 @@ export function WalletProvider({ children }: PropsWithChildren) {
       settings={{
         environmentId: DYNAMIC_ENVIRONMENT_ID,
         walletConnectors: [EthereumWalletConnectors],
-        overrides: {
-          views: [
-            {
-              type: "login",
-              name: "login",
-              tabs: [
-                {
-                  label: "Email & Social",
-                  type: "email-social",
-                },
-                {
-                  label: "Wallet",
-                  type: "wallet",
-                },
-              ],
-            },
-          ],
-        },
       }}
     >
       {children}
