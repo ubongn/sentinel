@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="48" viewBox="0 0 200 48" fill="none">
+  <!-- Shield icon -->
+  <path d="M24 4L6 12v12c0 10 8 18.5 18 20 10-1.5 18-10 18-20V12L24 4z" fill="#7C3AED" stroke="#6D28D9" stroke-width="1.5"/>
+  <path d="M24 10L12 15v7c0 7 5.3 12.5 12 13.5 6.7-1 12-6.5 12-13.5v-7L24 10z" fill="#8B5CF6"/>
+  <path d="M18 24l4 4 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Text -->
+  <text x="56" y="32" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="700" fill="#18181B" letter-spacing="-0.5">Sentinel</text>
+</svg>

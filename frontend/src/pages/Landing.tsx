@@ -3,9 +3,8 @@ import { Link } from "react-router-dom";
 const FEATURES = [
   {
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect x="2" y="2" width="28" height="28" rx="6" stroke="#6C5CE7" strokeWidth="2" fill="none"/>
-        <path d="M10 16h12M16 10v12" stroke="#6C5CE7" strokeWidth="2" strokeLinecap="round"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
       </svg>
     ),
     title: "Spending Limits",
@@ -13,9 +12,8 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <circle cx="16" cy="16" r="12" stroke="#6C5CE7" strokeWidth="2" fill="none"/>
-        <path d="M11 16l3 3 7-7" stroke="#6C5CE7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
     title: "Address Whitelists",
@@ -23,9 +21,8 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <circle cx="16" cy="16" r="12" stroke="#6C5CE7" strokeWidth="2" fill="none"/>
-        <path d="M16 10v6l4 2" stroke="#6C5CE7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
       </svg>
     ),
     title: "Time-Locks",
@@ -33,13 +30,12 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect x="6" y="4" width="20" height="24" rx="3" stroke="#6C5CE7" strokeWidth="2" fill="none"/>
-        <path d="M12 14h8M12 18h8M12 22h5" stroke="#6C5CE7" strokeWidth="2" strokeLinecap="round"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
     ),
     title: "Circuit Breaks",
-    desc: "Emergency pause all agent activity instantly. One transaction to halt everything.",
+    desc: "Emergency pause all agent activity instantly. Auto-trigger when spending exceeds your configured threshold.",
   },
 ];
 
@@ -63,8 +59,8 @@ export function Landing() {
             for AI agents — enforced by smart contracts on Monad. No bypass. No trust required.
           </p>
           <div className="hero-actions">
-            <Link to="/create-policy" className="btn btn-primary">Create Policy</Link>
-            <Link to="/docs" className="btn btn-secondary">Read Docs</Link>
+            <Link to="/create-policy" className="btn btn-primary btn-lg">Create Policy</Link>
+            <Link to="/docs" className="btn btn-secondary btn-lg">Read Docs</Link>
           </div>
         </div>
       </section>
@@ -74,7 +70,7 @@ export function Landing() {
         <h2>Guardrails that work</h2>
         <p className="section-subtitle">Every agent transaction is checked against your on-chain policy before execution.</p>
         <div className="features-grid">
-          {FEATURES.map(f => (
+          {FEATURES.map((f) => (
             <div key={f.title} className="feature-card">
               <div className="feature-icon">{f.icon}</div>
               <h3>{f.title}</h3>
@@ -88,7 +84,7 @@ export function Landing() {
       <section className="how-it-works">
         <h2>How it works</h2>
         <div className="steps">
-          {HOW_IT_WORKS.map(s => (
+          {HOW_IT_WORKS.map((s) => (
             <div key={s.step} className="step">
               <div className="step-number">{s.step}</div>
               <h3>{s.title}</h3>
@@ -111,8 +107,8 @@ export function Landing() {
             <p>Trustless agent registry. Each agent registers on-chain with guardrails attached. Any app can verify.</p>
           </div>
           <div className="primitive-card">
-            <h3>BTX Encrypted Mempools</h3>
-            <p>Spending limits and whitelists stay private until execution. Guardrail config is never publicly exposed.</p>
+            <h3>10k TPS</h3>
+            <p>Monad's parallel execution enables guardrail checks at scale. No latency tradeoff for safety.</p>
           </div>
         </div>
       </section>
@@ -121,7 +117,7 @@ export function Landing() {
       <section className="cta">
         <h2>Ready to add guardrails?</h2>
         <p>Define your first policy in under 2 minutes.</p>
-        <Link to="/create-policy" className="btn btn-primary">Get Started</Link>
+        <Link to="/create-policy" className="btn btn-primary btn-lg">Get Started</Link>
       </section>
     </div>
   );
