@@ -1,59 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 
-interface Toast {
-  id: number;
-  message: string;
-  type: "success" | "error" | "info";
-}
-
-let nextId = 0;
-let listeners: Array<(toasts: Toast[]) => void> = [];
-let toasts: Toast[] = [];
-
-function notify(message: string, type: Toast["type"] = "info") {
-  const toast: Toast = { id: nextId++, message, type };
-  toasts = [...toasts, toast];
-  listeners.forEach(fn => fn(toasts));
-  setTimeout(() => {
-    toasts = toasts.filter(t => t.id !== toast.id);
-    listeners.forEach(fn => fn(toasts));
-  }, 6000);
-}
-
-export const toast = {
-  success: (msg: string) => notify(msg, "success"),
-  error: (msg: string) => notify(msg, "error"),
-  info: (msg: string) => notify(msg, "info"),
-};
-
-export function ToastContainer() {
-  const [items, setItems] = useState<Toast[]>([]);
-
-  useEffect(() => {
-    listeners.push(setItems);
-    return () => { listeners = listeners.filter(fn => fn !== setItems); };
-  }, []);
-
-  const dismiss = useCallback((id: number) => {
-    toasts = toasts.filter(t => t.id !== id);
-    listeners.forEach(fn => fn(toasts));
-  }, []);
-
-  if (items.length === 0) return null;
-
-  return (
-    <div className="toast-container">
-      {items.map(t => (
-        <div key={t.id} className={`toast toast-${t.type}`} onClick={() => dismiss(t.id)}>
-          <span className="toast-icon">
-            {t.type === "success" ? "✓" : t.type === "error" ? "✕" : "ℹ"}
-          </span>
-          <span className="toast-message">{t.message}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
+// Re-export sonner's toast with the same API
+export { toast };
 
 /**
  * Parse contract errors into user-friendly messages WITH next-step guidance.

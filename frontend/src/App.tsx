@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
-import { ToastContainer } from "./components/Toast";
 import { Landing } from "./pages/Landing";
 import { Dashboard } from "./pages/Dashboard";
 import { CreatePolicy } from "./pages/CreatePolicy";
@@ -14,7 +14,19 @@ export default function App() {
     <BrowserRouter>
       <div className="app">
         <Navbar />
-        <ToastContainer />
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: "#1a1a2e",
+              border: "1px solid rgba(139,92,246,0.2)",
+              color: "#f1f5f9",
+              borderRadius: "12px",
+              fontFamily: "inherit",
+            },
+          }}
+          theme="dark"
+        />
         <main className="main">
           <Routes>
             <Route path="/" element={<Landing />} />

@@ -15,7 +15,8 @@
     "ethers": "^6.17.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
