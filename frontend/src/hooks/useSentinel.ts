@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { ethers } from "ethers";
 import { CONTRACTS, MONAD_RPC } from "../config/contracts";
 import { useWallet } from "../context/WalletContext";
+import { toast, parseContractError } from "../components/Toast";
 import RegistryAbi from "../abi/SentinelRegistry.json";
 import GuardAbi from "../abi/SentinelGuard.json";
 import P256Abi from "../abi/P256PolicyAuth.json";
@@ -60,7 +61,7 @@ export function useSentinel() {
       const tx = await registry.registerAgent(agentAddress, policyHash, metadata);
       await tx.wait();
       return tx.hash;
-    } catch (e: any) { setError(e.message); throw e; } finally { setLoading(false); }
+    } catch (e: any) { const msg = parseContractError(e); setError(msg); toast.error(msg); throw e; } finally { setLoading(false); }
   }, [getSigner]);
 
   const getAgent = useCallback(async (address: string): Promise<AgentInfo> => {
@@ -116,7 +117,7 @@ export function useSentinel() {
         } catch {}
       }
       return { txHash: tx.hash, policyId };
-    } catch (e: any) { setError(e.message); throw e; } finally { setLoading(false); }
+    } catch (e: any) { const msg = parseContractError(e); setError(msg); toast.error(msg); throw e; } finally { setLoading(false); }
   }, [getSigner]);
 
   const setPolicyForAgent = useCallback(async (agentAddress: string, policyId: bigint) => {
@@ -127,7 +128,7 @@ export function useSentinel() {
       const tx = await guard.setPolicyForAgent(agentAddress, policyId);
       await tx.wait();
       return tx.hash;
-    } catch (e: any) { setError(e.message); throw e; } finally { setLoading(false); }
+    } catch (e: any) { const msg = parseContractError(e); setError(msg); toast.error(msg); throw e; } finally { setLoading(false); }
   }, [getSigner]);
 
   const getPolicy = useCallback(async (policyId: bigint): Promise<PolicyInfo> => {
@@ -144,7 +145,7 @@ export function useSentinel() {
       const tx = await guard.pauseAgent(agentAddress);
       await tx.wait();
       return tx.hash;
-    } catch (e: any) { setError(e.message); throw e; } finally { setLoading(false); }
+    } catch (e: any) { const msg = parseContractError(e); setError(msg); toast.error(msg); throw e; } finally { setLoading(false); }
   }, [getSigner]);
 
   const unpauseAgent = useCallback(async (agentAddress: string) => {
@@ -155,7 +156,7 @@ export function useSentinel() {
       const tx = await guard.unpauseAgent(agentAddress);
       await tx.wait();
       return tx.hash;
-    } catch (e: any) { setError(e.message); throw e; } finally { setLoading(false); }
+    } catch (e: any) { const msg = parseContractError(e); setError(msg); toast.error(msg); throw e; } finally { setLoading(false); }
   }, [getSigner]);
 
   const canExecute = useCallback(async (agent: string, to: string, value: string) => {

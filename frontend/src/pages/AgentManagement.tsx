@@ -6,7 +6,7 @@ import { CleanverseVerification } from "../components/CleanverseVerification";
 import { toast, parseContractError } from "../components/Toast";
 
 export function AgentManagement() {
-  const { registerAgent, setPolicyForAgent, pauseAgent, unpauseAgent, loading, error } = useSentinel();
+  const { registerAgent, setPolicyForAgent, pauseAgent, unpauseAgent, loading } = useSentinel();
   const [agentAddress, setAgentAddress] = useState("");
   const [policyId, setPolicyId] = useState("");
   const [metadata, setMetadata] = useState("");
@@ -42,7 +42,7 @@ export function AgentManagement() {
       setResult(txHash);
       toast.success(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
     } catch (err: any) {
-      toast.error(parseContractError(err));
+      // Error toast handled by useSentinel hook
     }
   }
 
@@ -144,7 +144,7 @@ export function AgentManagement() {
               </div>
             )}
 
-            {error && <div className="error-message">{error}</div>}
+            {/* Toast handles errors */}
 
             <button
               type="submit"

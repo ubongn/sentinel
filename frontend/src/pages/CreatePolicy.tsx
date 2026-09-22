@@ -66,7 +66,7 @@ const PRESETS: PolicyPreset[] = [
 ];
 
 export function CreatePolicy() {
-  const { createPolicy, loading, error } = useSentinel();
+  const { createPolicy, loading } = useSentinel();
   const [showAi, setShowAi] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [form, setForm] = useState({ ...DEFAULT_FORM });
@@ -123,7 +123,7 @@ export function CreatePolicy() {
       setResult(res);
       toast.success("Policy created successfully!");
     } catch (err: any) {
-      toast.error(parseContractError(err));
+      // Error toast handled by useSentinel hook
     }
   }
 
@@ -264,7 +264,7 @@ export function CreatePolicy() {
               </div>
             </div>
 
-            {error && <div className="error-message">{error}</div>}
+            {/* Toast handles errors */}
 
             <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
               {loading ? "Creating..." : "Create Policy"}
