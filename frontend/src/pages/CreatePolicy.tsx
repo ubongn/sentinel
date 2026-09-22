@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSentinel } from "../hooks/useSentinel";
 import { AiAssistant } from "../components/AiAssistant";
-import { toast, parseContractError } from "../components/Toast";
+import { toast } from "sonner";
 
 interface PolicyPreset {
   id: string;

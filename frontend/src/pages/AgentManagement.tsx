@@ -3,7 +3,7 @@ import { useSentinel } from "../hooks/useSentinel";
 import { MONAD_EXPLORER } from "../config/contracts";
 import { PasskeyAuth } from "../components/PasskeyAuth";
 import { CleanverseVerification } from "../components/CleanverseVerification";
-import { toast, parseContractError } from "../components/Toast";
+import { toast } from "sonner";
 
 export function AgentManagement() {
   const { registerAgent, setPolicyForAgent, pauseAgent, unpauseAgent, loading } = useSentinel();
