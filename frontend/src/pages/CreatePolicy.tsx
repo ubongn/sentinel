@@ -2,22 +2,83 @@ import { useState } from "react";
 import { useSentinel } from "../hooks/useSentinel";
 import { AiAssistant } from "../components/AiAssistant";
 
+interface PolicyPreset {
+  id: string;
+  name: string;
+  desc: string;
+  form: typeof DEFAULT_FORM;
+}
+
+const DEFAULT_FORM = {
+  maxSpendPerTx: "1",
+  maxSpendPerPeriod: "10",
+  periodDuration: "86400",
+  timeLockDuration: "3600",
+  timeLockThreshold: "5",
+  circuitBreakThreshold: "100",
+  whitelist: "",
+};
+
+const PRESETS: PolicyPreset[] = [
+  {
+    id: "conservative",
+    name: "Conservative",
+    desc: "Strict limits for high-value agents. Maximum protection, slower throughput.",
+    form: {
+      maxSpendPerTx: "0.5",
+      maxSpendPerPeriod: "5",
+      periodDuration: "86400",
+      timeLockDuration: "3600",
+      timeLockThreshold: "1",
+      circuitBreakThreshold: "10",
+      whitelist: "",
+    },
+  },
+  {
+    id: "balanced",
+    name: "Balanced",
+    desc: "Moderate limits for everyday agent operations. Good safety with flexibility.",
+    form: {
+      maxSpendPerTx: "1",
+      maxSpendPerPeriod: "10",
+      periodDuration: "86400",
+      timeLockDuration: "1800",
+      timeLockThreshold: "5",
+      circuitBreakThreshold: "50",
+      whitelist: "",
+    },
+  },
+  {
+    id: "aggressive",
+    name: "Aggressive",
+    desc: "Higher limits for active trading agents. Essential guardrails, faster execution.",
+    form: {
+      maxSpendPerTx: "5",
+      maxSpendPerPeriod: "50",
+      periodDuration: "86400",
+      timeLockDuration: "600",
+      timeLockThreshold: "25",
+      circuitBreakThreshold: "200",
+      whitelist: "",
+    },
+  },
+];
+
 export function CreatePolicy() {
   const { createPolicy, loading, error } = useSentinel();
   const [showAi, setShowAi] = useState(false);
-  const [form, setForm] = useState({
-    maxSpendPerTx: "1",
-    maxSpendPerPeriod: "10",
-    periodDuration: "86400",
-    timeLockDuration: "3600",
-    timeLockThreshold: "5",
-    circuitBreakThreshold: "100",
-    whitelist: "",
-  });
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const [form, setForm] = useState({ ...DEFAULT_FORM });
   const [result, setResult] = useState<{ txHash: string; policyId: bigint } | null>(null);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setSelectedPreset(null);
+  }
+
+  function handlePresetSelect(preset: PolicyPreset) {
+    setSelectedPreset(preset.id);
+    setForm({ ...preset.form });
   }
 
   function handleAiPolicy(policy: {
@@ -39,6 +100,7 @@ export function CreatePolicy() {
       whitelist: policy.whitelist.join("\n"),
     });
     setShowAi(false);
+    setSelectedPreset(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -81,6 +143,26 @@ export function CreatePolicy() {
         </div>
       ) : (
         <>
+          {/* Quick Presets */}
+          <div className="preset-grid">
+            {PRESETS.map(preset => (
+              <button
+                key={preset.id}
+                className={`preset-card ${selectedPreset === preset.id ? "selected" : ""}`}
+                onClick={() => handlePresetSelect(preset)}
+                type="button"
+              >
+                <div className="preset-name">{preset.name}</div>
+                <div className="preset-desc">{preset.desc}</div>
+                <div className="preset-values">
+                  <span className="preset-value">{preset.form.maxSpendPerTx} MON/tx</span>
+                  <span className="preset-value">{preset.form.maxSpendPerPeriod} MON/day</span>
+                  <span className="preset-value">{parseInt(preset.form.timeLockDuration) / 60}m lock</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
           {/* AI Assistant Toggle */}
           <div style={{ marginBottom: "24px" }}>
             <button

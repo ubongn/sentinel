@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 
 interface ActivityItem {
   type: string;
+  status: "passed" | "blocked" | "timelocked" | "info";
   txHash: string;
   blockNumber: number;
   agent?: string;
@@ -22,7 +23,7 @@ export function ActivityFeed() {
 
   useEffect(() => {
     loadActivity();
-    const interval = setInterval(loadActivity, 15000); // refresh every 15s
+    const interval = setInterval(loadActivity, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -35,20 +36,35 @@ export function ActivityFeed() {
           txHash: ev.transactionHash,
           blockNumber: ev.blockNumber,
           timestamp: new Date().toISOString(),
+          status: "info" as const,
         };
         if (ev.fragment?.name === "TransactionExecuted") {
+          const value = ethers.formatEther(args[2] || 0n);
           return {
             ...base,
             type: "Transaction Executed",
+            status: "passed" as const,
+            agent: args[0],
+            to: args[1],
+            value,
+          };
+        }
+        if (ev.fragment?.name === "TransactionBlocked") {
+          return {
+            ...base,
+            type: "Transaction Blocked",
+            status: "blocked" as const,
             agent: args[0],
             to: args[1],
             value: ethers.formatEther(args[2] || 0n),
+            reason: args[3],
           };
         }
         if (ev.fragment?.name === "AgentRegistered") {
           return {
             ...base,
             type: "Agent Registered",
+            status: "info" as const,
             agent: args[0],
             owner: args[1],
           };
@@ -57,8 +73,17 @@ export function ActivityFeed() {
           return {
             ...base,
             type: "Agent Paused",
+            status: "blocked" as const,
             agent: args[0],
             reason: args[1],
+          };
+        }
+        if (ev.fragment?.name === "TimeLockQueued") {
+          return {
+            ...base,
+            type: "Time-Lock Queued",
+            status: "timelocked" as const,
+            agent: args[0],
           };
         }
         return { ...base, type: ev.fragment?.name || "Unknown" };
@@ -71,28 +96,40 @@ export function ActivityFeed() {
     }
   }
 
-  function getEventIcon(type: string) {
-    if (type.includes("Executed")) return (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="8" stroke="#10B981" strokeWidth="2" fill="none"/>
-        <path d="M7 10l2 2 4-4" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    );
-    if (type.includes("Registered")) return (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="8" stroke="#6C5CE7" strokeWidth="2" fill="none"/>
-        <path d="M10 6v8M6 10h8" stroke="#6C5CE7" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
-    );
-    if (type.includes("Paused")) return (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="8" stroke="#EF4444" strokeWidth="2" fill="none"/>
-        <path d="M8 7v6M12 7v6" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
-    );
+  // Compute summary stats
+  const totalChecked = activities.length;
+  const blockedCount = activities.filter(a => a.status === "blocked").length;
+  const passedCount = activities.filter(a => a.status === "passed").length;
+
+  function getEventIcon(status: ActivityItem["status"]) {
+    if (status === "passed") {
+      return (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="#22C55E" strokeWidth="2" fill="none" />
+          <path d="M7 10l2 2 4-4" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+    if (status === "blocked") {
+      return (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="#EF4444" strokeWidth="2" fill="none" />
+          <path d="M7.5 7.5l5 5M12.5 7.5l-5 5" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    }
+    if (status === "timelocked") {
+      return (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="#F59E0B" strokeWidth="2" fill="none" />
+          <path d="M10 6v4l2.5 1.5" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    }
     return (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="8" stroke="#94A3B8" strokeWidth="2" fill="none"/>
+        <circle cx="10" cy="10" r="8" stroke="#7C3AED" strokeWidth="2" fill="none" />
+        <path d="M10 6v8M6 10h8" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" />
       </svg>
     );
   }
@@ -104,13 +141,42 @@ export function ActivityFeed() {
         <p>Real-time feed of agent transactions being checked against guardrails.</p>
       </div>
 
+      {/* Protection Summary */}
+      {!loading && totalChecked > 0 && (
+        <div className="protection-summary">
+          <span className="protection-summary-title">Protection Summary</span>
+          <div className="protection-stat total">
+            <span className="protection-stat-count">{totalChecked}</span>
+            <span className="protection-stat-label">checked</span>
+          </div>
+          <div className="protection-stat blocked">
+            <span className="protection-stat-count">{blockedCount}</span>
+            <span className="protection-stat-label">blocked</span>
+          </div>
+          <div className="protection-stat passed">
+            <span className="protection-stat-count">{passedCount}</span>
+            <span className="protection-stat-label">passed</span>
+          </div>
+        </div>
+      )}
+
       {loading ? (
-        <div className="loading">Loading activity...</div>
+        <div className="activity-list">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="activity-item">
+              <div className="skeleton" style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0 }} />
+              <div className="activity-content" style={{ flex: 1 }}>
+                <div className="skeleton skeleton-text" style={{ width: "40%" }} />
+                <div className="skeleton skeleton-text-sm" style={{ width: "70%" }} />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : activities.length === 0 ? (
         <div className="empty-state">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="20" stroke="#CBD5E1" strokeWidth="2" fill="none"/>
-            <path d="M24 16v8l4 2" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round"/>
+            <circle cx="24" cy="24" r="20" stroke="#CBD5E1" strokeWidth="2" fill="none" />
+            <path d="M24 16v8l4 2" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" />
           </svg>
           <h3>No activity yet</h3>
           <p>Agent transactions will appear here as they are checked against guardrails.</p>
@@ -119,11 +185,11 @@ export function ActivityFeed() {
         <div className="activity-list">
           {activities.map((item, i) => (
             <div key={`${item.txHash}-${i}`} className="activity-item">
-              <div className="activity-icon">{getEventIcon(item.type)}</div>
+              <div className="activity-icon">{getEventIcon(item.status)}</div>
               <div className="activity-content">
                 <div className="activity-header">
                   <span className="activity-type">{item.type}</span>
-                  <span className="activity-time">{item.timestamp}</span>
+                  <span className="activity-time">{new Date(item.timestamp).toLocaleTimeString()}</span>
                 </div>
                 <div className="activity-details">
                   {item.agent && (
@@ -141,6 +207,11 @@ export function ActivityFeed() {
                     </span>
                   )}
                   {item.value && <span className="detail">{item.value} MON</span>}
+                  {item.status !== "info" && (
+                    <span className={`activity-status-badge ${item.status}`}>
+                      {item.status === "passed" ? "Passed" : item.status === "blocked" ? "Blocked" : "Time-Locked"}
+                    </span>
+                  )}
                 </div>
               </div>
               <a
@@ -149,7 +220,7 @@ export function ActivityFeed() {
                 className="activity-link"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 3H3v10h10v-3M9 2h5v5M14 2L7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 3H3v10h10v-3M9 2h5v5M14 2L7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </a>
             </div>

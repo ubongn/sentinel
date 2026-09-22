@@ -1,4 +1,8 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSentinel } from "../hooks/useSentinel";
+import { LiveDemo } from "../components/LiveDemo";
+import { CONTRACTS } from "../config/contracts";
 
 const FEATURES = [
   {
@@ -46,29 +50,144 @@ const HOW_IT_WORKS = [
   { step: "4", title: "Monitor & Control", desc: "Real-time activity feed. Pause or adjust guardrails at any time." },
 ];
 
+const PRIMITIVES = [
+  {
+    tag: "P256 Precompile",
+    title: "Passkey Auth",
+    desc: "WebAuthn passkey authorization via Monad's native P256 precompile (EIP-7212). No seed phrases needed.",
+  },
+  {
+    tag: "ERC-8004",
+    title: "Trustless Agent Registry",
+    desc: "On-chain agent registration with guardrail policy hash. Any app can verify an agent's safety guarantees.",
+  },
+  {
+    tag: "10,000 TPS",
+    title: "Parallel Execution",
+    desc: "Monad's parallel execution enables guardrail checks at scale with zero latency tradeoff for safety.",
+  },
+];
+
 export function Landing() {
+  const { getAgentCount } = useSentinel();
+  const [agentCount, setAgentCount] = useState<string>("--");
+  const [contractCount] = useState("3");
+
+  useEffect(() => {
+    getAgentCount()
+      .then(count => setAgentCount(count.toString()))
+      .catch(() => setAgentCount("0"));
+  }, [getAgentCount]);
+
   return (
     <div className="landing">
-      {/* Hero */}
+      {/* ── Hero ── */}
       <section className="hero">
         <div className="hero-content">
           <div className="hero-badge">Monad Testnet</div>
-          <h1>On-chain guardrails for AI agents</h1>
+          <h1>
+            AI agents can drain wallets.
+            <br />
+            <span className="hero-highlight">Sentinel stops them.</span>
+          </h1>
           <p className="hero-subtitle">
-            Sentinel lets you define spending limits, whitelists, time-locks, and circuit breaks
-            for AI agents — enforced by smart contracts on Monad. No bypass. No trust required.
+            On-chain guardrails for autonomous AI agents: spending limits, whitelists,
+            time-locks, and circuit breaks. Enforced by smart contracts on Monad.
+            No bypass. No trust required.
           </p>
           <div className="hero-actions">
-            <Link to="/create-policy" className="btn btn-primary btn-lg">Create Policy</Link>
-            <Link to="/docs" className="btn btn-secondary btn-lg">Read Docs</Link>
+            <Link to="/create-policy" className="btn btn-primary btn-lg">
+              Try It on Monad Testnet
+            </Link>
+            <Link to="/docs" className="btn btn-secondary btn-lg">
+              Read the Docs
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Features */}
+      {/* ── Problem Statement ── */}
+      <section className="problem-statement">
+        <div className="problem-grid">
+          <div className="problem-card problem-card-danger">
+            <div className="problem-icon">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <path d="M16 4L2 28h28L16 4z" stroke="#EF4444" strokeWidth="2" fill="none" />
+                <line x1="16" y1="12" x2="16" y2="19" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" />
+                <circle cx="16" cy="23" r="1.5" fill="#EF4444" />
+              </svg>
+            </div>
+            <h3>The Problem</h3>
+            <p>
+              Autonomous AI agents can execute transactions on behalf of users.
+              Without guardrails, a compromised or misaligned agent can drain
+              an entire wallet in a single transaction.
+            </p>
+          </div>
+          <div className="problem-card problem-card-solution">
+            <div className="problem-icon">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <path d="M16 4s10 4 10 14v6l-10 4-10-4v-6c0-10 10-14 10-14z" stroke="#22C55E" strokeWidth="2" fill="none" />
+                <path d="M12 17l3 3 5-6" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h3>The Solution</h3>
+            <p>
+              Sentinel enforces safety at the smart contract level. Every agent
+              transaction is validated against an on-chain policy before execution.
+              Spending limits, whitelists, time-locks, circuit breaks.
+              All enforced on-chain. Not by the agent.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Live Demo ── */}
+      <section className="demo-section">
+        <div className="demo-section-header">
+          <h2>See It In Action</h2>
+          <p className="section-subtitle">
+            Watch how Sentinel's guardrail contract validates every agent transaction on-chain.
+          </p>
+        </div>
+        <LiveDemo />
+      </section>
+
+      {/* ── Live Stats ── */}
+      <section className="live-stats">
+        <div className="stats-grid">
+          <div className="stat-item">
+            <div className="stat-number">{contractCount}</div>
+            <div className="stat-description">Contracts Deployed</div>
+            <div className="stat-detail">on Monad Testnet</div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <div className="stat-number">{agentCount}</div>
+            <div className="stat-description">Agents Registered</div>
+            <div className="stat-detail">ERC-8004 compliant</div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <div className="stat-number">5</div>
+            <div className="stat-description">Bounty Integrations</div>
+            <div className="stat-detail">Dynamic, Mera, Chainlink, Qwen, Cleanverse</div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <div className="stat-number">100%</div>
+            <div className="stat-description">On-Chain Enforcement</div>
+            <div className="stat-detail">Zero off-chain trust</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ── */}
       <section className="features">
-        <h2>Guardrails that work</h2>
-        <p className="section-subtitle">Every agent transaction is checked against your on-chain policy before execution.</p>
+        <h2>Four guardrails. Total control.</h2>
+        <p className="section-subtitle">
+          Every agent transaction is checked against your on-chain policy before execution.
+        </p>
         <div className="features-grid">
           {FEATURES.map((f) => (
             <div key={f.title} className="feature-card">
@@ -80,7 +199,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
+      {/* ── How It Works ── */}
       <section className="how-it-works">
         <h2>How it works</h2>
         <div className="steps">
@@ -94,29 +213,47 @@ export function Landing() {
         </div>
       </section>
 
-      {/* Monad Primitives */}
+      {/* ── Monad Primitives ── */}
       <section className="primitives">
         <h2>Built on Monad Primitives</h2>
+        <p className="section-subtitle">
+          Sentinel leverages Monad's unique features for performance and UX.
+        </p>
         <div className="primitives-grid">
-          <div className="primitive-card">
-            <h3>P256 Precompile</h3>
-            <p>Passkey-based policy authorization via WebAuthn. No seed phrases needed for policy management.</p>
-          </div>
-          <div className="primitive-card">
-            <h3>ERC-8004</h3>
-            <p>Trustless agent registry. Each agent registers on-chain with guardrails attached. Any app can verify.</p>
-          </div>
-          <div className="primitive-card">
-            <h3>10k TPS</h3>
-            <p>Monad's parallel execution enables guardrail checks at scale. No latency tradeoff for safety.</p>
-          </div>
+          {PRIMITIVES.map((p) => (
+            <div key={p.tag} className="primitive-card">
+              <div className="primitive-tag">{p.tag}</div>
+              <h3>{p.title}</h3>
+              <p>{p.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ── Contract Addresses ── */}
+      <section className="contracts-section">
+        <h2>Deployed Contracts</h2>
+        <p className="section-subtitle">Live on Monad Testnet (Chain ID: 10143)</p>
+        <div className="contracts-grid">
+          {Object.entries(CONTRACTS).map(([name, address]) => (
+            <a
+              key={name}
+              href={`https://monad-testnet.socialscan.io/address/${address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="contract-card"
+            >
+              <div className="contract-name">{name}</div>
+              <div className="contract-address">{address}</div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
       <section className="cta">
         <h2>Ready to add guardrails?</h2>
-        <p>Define your first policy in under 2 minutes.</p>
+        <p>Define your first policy in under 2 minutes. No seed phrases needed.</p>
         <Link to="/create-policy" className="btn btn-primary btn-lg">Get Started</Link>
       </section>
     </div>

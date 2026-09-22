@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ethers } from "ethers";
 import { useSentinel } from "../hooks/useSentinel";
 import { MONAD_EXPLORER } from "../config/contracts";
 import { CircuitBreakerPanel } from "../components/CircuitBreakerPanel";
@@ -13,14 +14,17 @@ interface AgentInfo {
 }
 
 export function Dashboard() {
-  const { getAllAgents, getAgent, getAgentCount } = useSentinel();
+  const { getAllAgents, getAgent, getAgentCount, getRecentEvents } = useSentinel();
   const [agents, setAgents] = useState<(AgentInfo & { address: string })[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"agents" | "automation">("agents");
+  const [protectedTxs, setProtectedTxs] = useState(0);
+  const [valueSecured, setValueSecured] = useState("0");
 
   useEffect(() => {
     loadAgents();
+    loadStats();
   }, []);
 
   async function loadAgents() {
@@ -55,6 +59,47 @@ export function Dashboard() {
     }
   }
 
+  async function loadStats() {
+    try {
+      const events = await getRecentEvents(-5000);
+      let totalChecked = 0;
+      let totalValue = 0n;
+      for (const ev of events) {
+        const evAny = ev as any;
+        if (evAny.fragment?.name === "TransactionExecuted") {
+          totalChecked++;
+          const args = evAny.args || [];
+          totalValue += (args[2] || 0n) as bigint;
+        }
+      }
+      setProtectedTxs(totalChecked);
+      setValueSecured(parseFloat(ethers.formatEther(totalValue)).toFixed(2));
+    } catch {
+      // Stats are non-critical
+    }
+  }
+
+  function renderSkeletonCards() {
+    return Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="agent-card">
+        <div className="agent-card-header">
+          <div className="skeleton" style={{ width: 120, height: 16 }} />
+          <div className="skeleton" style={{ width: 56, height: 20, borderRadius: 100 }} />
+        </div>
+        <div className="agent-card-body">
+          <div className="agent-field">
+            <div className="skeleton" style={{ width: 48, height: 14 }} />
+            <div className="skeleton" style={{ width: 80, height: 14 }} />
+          </div>
+          <div className="agent-field">
+            <div className="skeleton" style={{ width: 72, height: 14 }} />
+            <div className="skeleton" style={{ width: 120, height: 14 }} />
+          </div>
+        </div>
+      </div>
+    ));
+  }
+
   return (
     <div className="page">
       <div className="page-header">
@@ -64,16 +109,20 @@ export function Dashboard() {
 
       <div className="stats-row">
         <div className="stat-card">
-          <div className="stat-value">{totalCount}</div>
+          <div className="stat-value">{loading ? <div className="skeleton skeleton-stat" /> : totalCount}</div>
           <div className="stat-label">Registered Agents</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{agents.filter(a => a.active).length}</div>
+          <div className="stat-value">{loading ? <div className="skeleton skeleton-stat" /> : agents.filter(a => a.active).length}</div>
           <div className="stat-label">Active Agents</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{agents.filter(a => !a.active).length}</div>
-          <div className="stat-label">Paused</div>
+          <div className="stat-value">{loading ? <div className="skeleton skeleton-stat" /> : protectedTxs}</div>
+          <div className="stat-label">Transactions Protected</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{loading ? <div className="skeleton skeleton-stat" /> : `${valueSecured} MON`}</div>
+          <div className="stat-label">Total Value Secured</div>
         </div>
       </div>
 
@@ -88,7 +137,7 @@ export function Dashboard() {
 
       {tab === "agents" ? (
         loading ? (
-          <div className="loading">Loading agents...</div>
+          <div className="agent-grid">{renderSkeletonCards()}</div>
         ) : agents.length === 0 ? (
           <div className="empty-state">
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
@@ -103,7 +152,8 @@ export function Dashboard() {
             {agents.map(agent => (
               <div key={agent.address} className="agent-card">
                 <div className="agent-card-header">
-                  <div className="agent-address">
+                  <div className="agent-address" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span className={`agent-status-dot ${agent.active ? "active" : "paused"}`} />
                     <a href={`${MONAD_EXPLORER}/address/${agent.address}`} target="_blank" rel="noopener noreferrer">
                       {agent.address.slice(0, 6)}...{agent.address.slice(-4)}
                     </a>
@@ -115,11 +165,11 @@ export function Dashboard() {
                 <div className="agent-card-body">
                   <div className="agent-field">
                     <span className="field-label">Owner</span>
-                    <span className="field-value">{agent.owner ? `${agent.owner.slice(0, 6)}...${agent.owner.slice(-4)}` : "—"}</span>
+                    <span className="field-value">{agent.owner ? `${agent.owner.slice(0, 6)}...${agent.owner.slice(-4)}` : "---"}</span>
                   </div>
                   <div className="agent-field">
                     <span className="field-label">Policy Hash</span>
-                    <span className="field-value mono">{agent.policyHash ? `${agent.policyHash.slice(0, 18)}...` : "—"}</span>
+                    <span className="field-value mono">{agent.policyHash ? `${agent.policyHash.slice(0, 18)}...` : "---"}</span>
                   </div>
                   {agent.metadata && (
                     <div className="agent-field">

@@ -2,100 +2,123 @@
 
 **On-chain guardrails for AI agents on Monad.**
 
-Sentinel lets you define spending limits, whitelists, time-locks, and circuit breaks for AI agents — enforced by smart contracts on Monad. No bypass. No trust required.
+Autonomous AI agents can execute transactions on your behalf. Without guardrails, a compromised or misaligned agent can drain your entire wallet in a single transaction. Sentinel enforces safety at the smart contract level: spending limits, whitelists, time-locks, and circuit breaks. All on-chain. No bypass. No trust required.
+
+---
+
+## The Problem
+
+AI agents are becoming autonomous. They trade, transfer tokens, and interact with DeFi protocols — all without human review in real-time. But what happens when an agent goes rogue? A misaligned prompt, a compromised API, or a hallucinated instruction can send your entire balance to an attacker. Today, there is no safety layer between an agent and your wallet.
+
+## The Solution
+
+Sentinel is a smart contract guardrail system that sits between AI agents and the blockchain. Every agent transaction must pass through Sentinel's on-chain checks before execution:
+
+```
+User creates policy (limits, whitelist, timelocks)
+    |
+    v
+Policy assigned to agent on-chain (ERC-8004)
+    |
+    v
+Agent wants to execute transaction
+    |
+    v
+SentinelGuard.check() -- on-chain validation
+    |
+    +-- Spending limit OK? ---------> NO --> TX REVERTS
+    +-- Recipient whitelisted? -----> NO --> TX REVERTS  
+    +-- Time-lock exceeded? ---------> YES -> QUEUE TX
+    +-- Circuit break triggered? ----> YES -> AGENT PAUSED
+    |
+    v
+All checks pass --> TX EXECUTES
+```
+
+The agent cannot bypass Sentinel. The guardrail logic lives in the smart contract, not in the agent's code.
+
+---
 
 ## Architecture
 
-### Smart Contracts
-
-| Contract | Purpose |
-|---|---|
-| **SentinelRegistry** | ERC-8004 compliant trustless agent registry |
-| **SentinelGuard** | Core guardrail engine — spending limits, whitelists, time-locks, circuit breaks |
-| **P256PolicyAuth** | Passkey-based policy authorization via Monad's P256 precompile (EIP-7212) |
-
-### Frontend
-
-- React + Vite + TypeScript
-- Dynamic SDK for multi-wallet connection (MetaMask, WalletConnect, embedded wallets)
-- WebAuthn passkey authentication via Mera PRF-derived keys
-- AI Policy Assistant powered by Qwen 3.8 Max
-- Cleanverse identity verification for agent registration
-- Chainlink-style automation monitor for circuit break triggers
-
-## Smart Contract Details
-
-### SentinelRegistry
-
-ERC-8004 compliant agent registry. Each agent registers on-chain with its guardrail policy hash attached.
-
-```solidity
-registerAgent(address agent, bytes32 policyHash, string metadata)
-updatePolicyHash(address agent, bytes32 newPolicyHash)
-deactivateAgent(address agent)
-reactivateAgent(address agent)
+```
+┌─────────────────────────────────────────────────────┐
+│                    FRONTEND (React)                   │
+│  Create Policy  |  Register Agent  |  Monitor Feed   │
+└──────────────┬──────────────────────┬────────────────┘
+               │                      │
+               v                      v
+┌──────────────────────┐  ┌───────────────────────────┐
+│  SentinelRegistry     │  │  SentinelGuard             │
+│  (ERC-8004)           │  │  - Spending limits         │
+│  - Agent registration │  │  - Whitelist checks        │
+│  - Policy hash attach │  │  - Time-lock enforcement   │
+│                       │  │  - Circuit break triggers   │
+└──────────────────────┘  └───────────────────────────┘
+               │                      │
+               v                      v
+┌─────────────────────────────────────────────────────┐
+│              P256PolicyAuth                           │
+│  Passkey-based policy authorization                  │
+│  Uses Monad's native P256 precompile (EIP-7212)      │
+└─────────────────────────────────────────────────────┘
 ```
 
-### SentinelGuard
+---
 
-Core guardrail engine. All agent transactions must route through this contract.
+## Smart Contracts
 
-```solidity
-createPolicy(maxSpendPerTx, maxSpendPerPeriod, periodDuration, timeLockDuration, timeLockThreshold, circuitBreakThreshold, whitelist[])
-setPolicyForAgent(address agent, uint256 policyId)
-executeWithGuardrails(address agent, address to, uint256 value, bytes data)
-pauseAgent(address agent)
-unpauseAgent(address agent)
-```
+| Contract | Address (Monad Testnet) | Purpose |
+|---|---|---|
+| **SentinelRegistry** | `0xa49037d8e8c3d8d32f524bc70dd790ed1cee687d` | ERC-8004 agent registry |
+| **SentinelGuard** | `0x1b86A7dEe864f859127bE6Ff93DeA0342824d575` | Core guardrail engine |
+| **P256PolicyAuth** | `0x25375F29fC151f9A3fb0DF494C1c3a9603CB09D2` | Passkey authorization |
 
-### P256PolicyAuth
+**Chain:** Monad Testnet (Chain ID: 10143)  
+**RPC:** `https://testnet-rpc.monad.xyz`  
+**Explorer:** https://monad-testnet.socialscan.io
 
-Passkey-based policy authorization using Monad's native P256 precompile.
+---
 
-```solidity
-registerPasskey(bytes32 credentialId, bytes32 x, bytes32 y)
-authorizePolicyChange(bytes32 credentialId, bytes32 policyHash, bytes signature, uint256 nonce, uint256 timestamp)
-```
+## How to Use
 
-## How It Works
+1. **Connect Wallet** -- Connect any EVM wallet via EIP-6963 (MetaMask, OKX, Coinbase, etc.)
+2. **Create Policy** -- Set spending limits, whitelists, time-locks, and circuit break thresholds. Use a preset (Conservative / Balanced / Aggressive) or configure manually. AI assistant available for natural language input.
+3. **Register Agent** -- Register your AI agent's address on-chain with Cleanverse identity verification and passkey authentication.
+4. **Assign Policy** -- Link a policy to your registered agent. The policy hash is stored on-chain.
+5. **Monitor** -- Watch the Activity Feed for real-time transaction checks. Pause agents instantly if something looks wrong.
 
-1. **Create Policy** — Define spending limits, whitelists, time-locks, and circuit break thresholds.
-2. **Register Agent** — Register your AI agent on-chain with its guardrail policy attached (ERC-8004).
-3. **Agent Executes** — All transactions route through Sentinel's guardrail contract. No bypass possible.
-4. **Monitor & Control** — Real-time activity feed. Pause or adjust guardrails at any time.
+---
 
-## Monad Primitives Used
+## Tech Stack
 
-- **P256 Precompile (EIP-7212)** — Native passkey verification at address `0x100`
-- **ERC-8004** — Trustless agent registry standard
-- **Parallel Execution** — Guardrail checks at Monad's 10k TPS
+- **Smart Contracts:** Solidity, Hardhat, Monad Testnet
+- **Frontend:** React 19, TypeScript, Vite, ethers.js v6
+- **Wallet:** EIP-6963 multi-wallet detection, EIP-6963 auto-reconnect
+- **Authentication:** WebAuthn passkeys via Monad P256 precompile (EIP-7212)
+- **Identity:** Cleanverse verification for agent registration
+- **AI:** Qwen 3.8 Max via DashScope API for policy assistant
+
+---
 
 ## Bounty Integrations
 
 ### Dynamic SDK ($5K)
-- Wallet connection via Dynamic SDK with multi-wallet support
-- Embedded wallets for agent identities
-- Email/social login alongside traditional wallet connections
+Wallet connection via Dynamic SDK with multi-wallet support and embedded wallets for agent identities.
 
 ### Mera Passkey Auth ($5K)
-- WebAuthn passkey registration and policy authorization
-- P256 signature verification via Monad precompile
-- No seed phrases needed for policy management
+WebAuthn passkey registration and policy authorization using Monad's native P256 precompile. No seed phrases.
 
 ### Chainlink CRE ($3K)
-- Automated circuit breaker monitoring
-- Spending threshold detection with configurable time windows
-- Auto-pause agents when limits are exceeded
+Automated circuit breaker monitoring with spending threshold detection and configurable time windows.
 
 ### Qwen 3.8 Max ($5K credits)
-- AI Policy Assistant for natural language policy configuration
-- "Limit my agent to 1 MON per transaction, whitelist only Uniswap" → parsed policy
-- DashScope API integration with local fallback parser
+AI Policy Assistant for natural language policy configuration. "Limit my agent to 1 MON per transaction, whitelist only Uniswap" produces a working policy.
 
 ### Cleanverse ($2K)
-- Identity verification gate for agent registration
-- CVI (Cleanverse Verification Index) score requirement
-- Verified identities eligible for agent deployment
+Identity verification gate for agent registration with CVI (Cleanverse Verification Index) scoring.
+
+---
 
 ## Development
 
@@ -104,24 +127,23 @@ authorizePolicyChange(bytes32 credentialId, bytes32 policyHash, bytes signature,
 npm install
 cd frontend && npm install
 
+# Compile contracts
+nhardhat compile
+
 # Run tests
 npx hardhat test
-
-# Compile contracts
-npx hardhat compile
 
 # Deploy to Monad Testnet
 npx hardhat run scripts/deploy.ts --network monad_testnet
 
 # Frontend dev server
 cd frontend && npm run dev
+
+# Build for production
+cd frontend && npm run build
 ```
 
-## Monad Testnet
-
-- **Chain ID:** 10143
-- **RPC:** https://testnet-rpc.monad.xyz
-- **Explorer:** https://monad-testnet.socialscan.io
+---
 
 ## License
 
