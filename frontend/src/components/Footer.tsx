@@ -3,16 +3,10 @@ export function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
-            <rect width="28" height="28" rx="6" fill="#7C3AED" />
-            <path
-              d="M14 6L14 8M14 20L14 22M6 14L8 14M20 14L22 14"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <circle cx="14" cy="14" r="5" stroke="white" strokeWidth="2" fill="none" />
-            <path d="M14 9v3l2.5 1.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+          <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
+            <path d="M24 4L6 12v12c0 10 8 18.5 18 20 10-1.5 18-10 18-20V12L24 4z" fill="#7C3AED" stroke="#6D28D9" strokeWidth="1.5"/>
+            <path d="M24 10L12 15v7c0 7 5.3 12.5 12 13.5 6.7-1 12-6.5 12-13.5v-7L24 10z" fill="#8B5CF6"/>
+            <path d="M18 24l4 4 8-8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span>Sentinel</span>
         </div>
