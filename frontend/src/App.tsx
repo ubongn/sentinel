@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
+import { ToastContainer } from "./components/Toast";
 import { Landing } from "./pages/Landing";
 import { Dashboard } from "./pages/Dashboard";
 import { CreatePolicy } from "./pages/CreatePolicy";
@@ -13,6 +14,7 @@ export default function App() {
     <BrowserRouter>
       <div className="app">
         <Navbar />
+        <ToastContainer />
         <main className="main">
           <Routes>
             <Route path="/" element={<Landing />} />

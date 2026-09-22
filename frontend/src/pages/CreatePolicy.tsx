@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSentinel } from "../hooks/useSentinel";
 import { AiAssistant } from "../components/AiAssistant";
+import { toast, parseContractError } from "../components/Toast";
 
 interface PolicyPreset {
   id: string;
@@ -120,7 +121,10 @@ export function CreatePolicy() {
         whitelist
       );
       setResult(res);
-    } catch { /* error shown via hook */ }
+      toast.success("Policy created successfully!");
+    } catch (err: any) {
+      toast.error(parseContractError(err));
+    }
   }
 
   return (

@@ -3,6 +3,7 @@ import { useSentinel } from "../hooks/useSentinel";
 import { MONAD_EXPLORER } from "../config/contracts";
 import { PasskeyAuth } from "../components/PasskeyAuth";
 import { CleanverseVerification } from "../components/CleanverseVerification";
+import { toast, parseContractError } from "../components/Toast";
 
 export function AgentManagement() {
   const { registerAgent, setPolicyForAgent, pauseAgent, unpauseAgent, loading, error } = useSentinel();
@@ -39,7 +40,10 @@ export function AgentManagement() {
         default: return;
       }
       setResult(txHash);
-    } catch { /* error shown via hook */ }
+      toast.success(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+    } catch (err: any) {
+      toast.error(parseContractError(err));
+    }
   }
 
   return (
