@@ -110,6 +110,7 @@ contract SentinelAccount {
      */
     function execute(address to, uint256 value, bytes calldata data)
         external
+        payable
         returns (bytes memory returnData)
     {
         // Only the delegated EOA itself (msg.sender == address(this) after delegation)
@@ -161,7 +162,7 @@ contract SentinelAccount {
         address[] calldata tos,
         uint256[] calldata values,
         bytes[] calldata datas
-    ) external returns (bytes[] memory returnDatas) {
+    ) external payable returns (bytes[] memory returnDatas) {
         require(msg.sender == address(this), "only self");
         require(
             tos.length == values.length && values.length == datas.length,
@@ -248,12 +249,9 @@ contract SentinelAccount {
         if (code.length != 23) return false;
         if (code[0] != 0xef || code[1] != 0x01 || code[2] != 0x00) return false;
 
-        // Extract the delegated address from bytes 3-22
-        bytes20 addrBytes;
-        for (uint256 i = 0; i < 20; i++) {
-            addrBytes = addrBytes | (bytes20(code[3 + i]) >> (i * 8));
-        }
-        isDelegated = address(addrBytes) == sentinelAccountAddr;
+        // Extract the 20-byte delegated address from bytes 3-22
+        address delegated = _extractAddress(code);
+        isDelegated = delegated == sentinelAccountAddr;
     }
 
     /**
@@ -267,7 +265,7 @@ contract SentinelAccount {
         bytes memory code = eoa.code;
         if (code.length != 23) return address(0);
         if (code[0] != 0xef || code[1] != 0x01 || code[2] != 0x00) return address(0);
-        delegated = address(bytes20(code[3:23]));
+        delegated = _extractAddress(code);
     }
 
     /**
@@ -283,6 +281,21 @@ contract SentinelAccount {
     }
 
     // ──────────────────────────── Internal ──────────────────────────
+
+    /**
+     * @dev Extract a 20-byte address from EIP-7702 delegated code (bytes 3-22).
+     *      The code format is: 0xef0100 (3 bytes) + address (20 bytes).
+     */
+    function _extractAddress(bytes memory code) internal pure returns (address) {
+        // Manually construct the address from bytes 3..22
+        // Solidity's abi.encodePacked + slicing doesn't work for memory bytes,
+        // so we build it via shift + OR.
+        uint160 addr = 0;
+        for (uint256 i = 0; i < 20; i++) {
+            addr = (addr << 8) | uint160(uint8(code[3 + i]));
+        }
+        return address(addr);
+    }
 
     /**
      * @dev Recover the signer from a hash and signature.

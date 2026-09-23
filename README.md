@@ -1,8 +1,10 @@
 # Sentinel
 
-**On-chain guardrails for AI agents on Monad.**
+**On-chain guardrails for AI agents on Monad — with EIP-7702 no-bypass enforcement.**
 
 Autonomous AI agents can execute transactions on your behalf. Without guardrails, a compromised or misaligned agent can drain your entire wallet in a single transaction. Sentinel enforces safety at the smart contract level: spending limits, whitelists, time-locks, and circuit breaks. All on-chain. No bypass. No trust required.
+
+**The differentiator:** Sentinel uses Monad's native EIP-7702 support to make the agent's EOA *become* the SentinelAccount. The agent literally cannot bypass guardrails because the account itself IS Sentinel.
 
 ---
 
@@ -117,7 +119,7 @@ Sentinel uses **Monad's native EIP-7702 support** to make guardrails unbypassabl
 ## Tech Stack
 
 - **Smart Contracts:** Solidity, Hardhat, Monad Testnet
-- **Frontend:** React 19, TypeScript, Vite, ethers.js v6
+- **Frontend:** React 19, TypeScript, Vite, ethers.js v6, viem (for EIP-7702)
 - **Wallet:** EIP-6963 multi-wallet detection, EIP-6963 auto-reconnect
 - **Authentication:** WebAuthn passkeys via Monad P256 precompile (EIP-7212)
 - **Identity:** Cleanverse verification for agent registration
@@ -159,6 +161,9 @@ npx hardhat test
 
 # Deploy to Monad Testnet
 npx hardhat run scripts/deploy.ts --network monad_testnet
+
+# Deploy just SentinelAccount (if other contracts already deployed)
+npx hardhat run scripts/deploy-account.ts --network monad_testnet
 
 # Frontend dev server
 cd frontend && npm run dev

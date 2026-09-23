@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { useSentinel } from "../hooks/useSentinel";
-import { MONAD_EXPLORER } from "../config/contracts";
+import { MONAD_EXPLORER, getDelegationTarget, CONTRACTS } from "../config/contracts";
 import { CircuitBreakerPanel } from "../components/CircuitBreakerPanel";
 
 interface AgentInfo {
@@ -11,6 +11,7 @@ interface AgentInfo {
   updatedAt: bigint;
   active: boolean;
   metadata: string;
+  smartAccountActive?: boolean; // EIP-7702 status
 }
 
 export function Dashboard() {
@@ -36,7 +37,13 @@ export function Dashboard() {
       const infos = await Promise.all(
         addresses.map(async (addr: string) => {
           try {
-            const info = await getAgent(addr);
+            const [info, delegationTarget] = await Promise.all([
+              getAgent(addr),
+              getDelegationTarget(addr).catch(() => ethers.ZeroAddress),
+            ]);
+            const smartAccountActive =
+              CONTRACTS.SentinelAccount !== "0x0000000000000000000000000000000000000000" &&
+              delegationTarget.toLowerCase() === CONTRACTS.SentinelAccount.toLowerCase();
             return {
               owner: info.owner || "",
               policyHash: info.policyHash || "",
@@ -45,6 +52,7 @@ export function Dashboard() {
               active: info.active ?? false,
               metadata: info.metadata || "",
               address: addr,
+              smartAccountActive,
             };
           } catch {
             return null;
@@ -124,6 +132,12 @@ export function Dashboard() {
           <div className="stat-value">{loading ? <div className="skeleton skeleton-stat" /> : `${valueSecured} MON`}</div>
           <div className="stat-label">Total Value Secured</div>
         </div>
+        <div className="stat-card">
+          <div className="stat-value" style={{ color: "#22C55E" }}>
+            {loading ? <div className="skeleton skeleton-stat" /> : agents.filter(a => a.smartAccountActive).length}
+          </div>
+          <div className="stat-label">No-Bypass (7702)</div>
+        </div>
       </div>
 
       <div className="action-tabs" style={{ marginBottom: "24px" }}>
@@ -158,9 +172,29 @@ export function Dashboard() {
                       {agent.address.slice(0, 6)}...{agent.address.slice(-4)}
                     </a>
                   </div>
-                  <span className={`status-badge ${agent.active ? "active" : "inactive"}`}>
-                    {agent.active ? "Active" : "Paused"}
-                  </span>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    {/* EIP-7702 Smart Account badge */}
+                    {agent.smartAccountActive ? (
+                      <span className="status-badge" style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E", fontSize: "11px", display: "flex", alignItems: "center", gap: 4 }}>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M6 1L2 3v3c0 2.5 1.7 5 4 5.5 2.3-.5 4-3 4-5.5V3L6 1z" fill="#22C55E" stroke="#16A34A" strokeWidth="0.8"/>
+                          <path d="M4.5 6l1 1 2.5-2.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        No-Bypass
+                      </span>
+                    ) : (
+                      <span className="status-badge" style={{ background: "rgba(217,119,6,0.15)", color: "#D97706", fontSize: "11px", display: "flex", alignItems: "center", gap: 4 }}>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M6 1L2 3v3c0 2.5 1.7 5 4 5.5 2.3-.5 4-3 4-5.5V3L6 1z" stroke="#D97706" strokeWidth="0.8" fill="none"/>
+                          <path d="M6 4.5v2M6 8h.01" stroke="#D97706" strokeWidth="1" strokeLinecap="round"/>
+                        </svg>
+                        Opt-in
+                      </span>
+                    )}
+                    <span className={`status-badge ${agent.active ? "active" : "inactive"}`}>
+                      {agent.active ? "Active" : "Paused"}
+                    </span>
+                  </div>
                 </div>
                 <div className="agent-card-body">
                   <div className="agent-field">
@@ -170,6 +204,12 @@ export function Dashboard() {
                   <div className="agent-field">
                     <span className="field-label">Policy Hash</span>
                     <span className="field-value mono">{agent.policyHash ? `${agent.policyHash.slice(0, 18)}...` : "---"}</span>
+                  </div>
+                  <div className="agent-field">
+                    <span className="field-label">Guardrail Mode</span>
+                    <span className="field-value" style={{ color: agent.smartAccountActive ? "#22C55E" : "#D97706" }}>
+                      {agent.smartAccountActive ? "EIP-7702 Smart Account" : "Opt-in (bypassable)"}
+                    </span>
                   </div>
                   {agent.metadata && (
                     <div className="agent-field">

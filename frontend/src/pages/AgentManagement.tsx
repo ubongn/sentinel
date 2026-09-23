@@ -3,6 +3,7 @@ import { useSentinel } from "../hooks/useSentinel";
 import { MONAD_EXPLORER } from "../config/contracts";
 import { PasskeyAuth } from "../components/PasskeyAuth";
 import { CleanverseVerification } from "../components/CleanverseVerification";
+import { SmartAccountUpgrade } from "../components/SmartAccountUpgrade";
 import { toast } from "sonner";
 
 export function AgentManagement() {
@@ -10,7 +11,7 @@ export function AgentManagement() {
   const [agentAddress, setAgentAddress] = useState("");
   const [policyId, setPolicyId] = useState("");
   const [metadata, setMetadata] = useState("");
-  const [action, setAction] = useState<"register" | "assign" | "pause" | "unpause">("register");
+  const [action, setAction] = useState<"register" | "assign" | "pause" | "unpause" | "smart-account">("register");
   const [result, setResult] = useState<string | null>(null);
   const [cleanverseVerified, setCleanverseVerified] = useState(false);
   const [_passkeyRegistered, setPasskeyRegistered] = useState(false);
@@ -54,13 +55,13 @@ export function AgentManagement() {
       </div>
 
       <div className="action-tabs">
-        {(["register", "assign", "pause", "unpause"] as const).map(a => (
+        {(["register", "assign", "pause", "unpause", "smart-account"] as const).map(a => (
           <button
             key={a}
             className={`tab ${action === a ? "active" : ""}`}
             onClick={() => { setAction(a); setResult(null); }}
           >
-            {a.charAt(0).toUpperCase() + a.slice(1)}
+            {a === "smart-account" ? "Smart Account" : a.charAt(0).toUpperCase() + a.slice(1)}
           </button>
         ))}
       </div>
@@ -78,6 +79,31 @@ export function AgentManagement() {
             </a>
           </p>
           <button className="btn btn-secondary" style={{ marginTop: "16px" }} onClick={() => setResult(null)}>Continue</button>
+        </div>
+      ) : action === "smart-account" ? (
+        /* ─── Smart Account (EIP-7702) Upgrade ─── */
+        <div style={{ maxWidth: "640px" }}>
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "14px", marginBottom: 16 }}>
+              Upgrade your agent to use EIP-7702 delegation. Once upgraded, the agent's EOA runs
+              SentinelAccount's code — every transaction goes through guardrail checks automatically.
+              The agent cannot bypass Sentinel.
+            </p>
+            <div className="form-group">
+              <label htmlFor="agentAddressSA">Agent EOA Address</label>
+              <input
+                type="text" id="agentAddressSA"
+                value={agentAddress} onChange={e => setAgentAddress(e.target.value)}
+                placeholder="0x... (the agent's EOA address)"
+              />
+            </div>
+          </div>
+          <SmartAccountUpgrade
+            agentAddress={agentAddress}
+            onStatusChange={(active) => {
+              if (active) toast.success("Smart account is active!");
+            }}
+          />
         </div>
       ) : (
         <div style={{ maxWidth: "640px" }}>
