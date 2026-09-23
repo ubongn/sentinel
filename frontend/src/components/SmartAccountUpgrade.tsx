@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { createWalletClient, custom, parseEther } from "viem";
+import { createWalletClient, custom } from "viem";
 import { monadTestnet } from "viem/chains";
 import { toast } from "sonner";
 import { CONTRACTS, isSmartAccountActive, getDelegationTarget, MONAD_EXPLORER } from "../config/contracts";
@@ -96,6 +96,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       toast.info("Step 2/2: Submitting EIP-7702 delegation transaction...");
 
       const hash = await walletClient.sendTransaction({
+        account,
         authorizationList: [authorization],
         to: account, // send to self — the delegation is the point, not the value
         data: "0x",   // no calldata needed for the delegation tx itself
@@ -152,6 +153,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       });
 
       const hash = await walletClient.sendTransaction({
+        account,
         authorizationList: [authorization],
         to: account,
         data: "0x",
