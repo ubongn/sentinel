@@ -29,7 +29,15 @@ async function main() {
   const p256Addr = await p256.getAddress();
   console.log("P256PolicyAuth deployed to:", p256Addr);
 
-  // 4. Write deployment info
+  // 4. Deploy SentinelAccount (needs guard + registry)
+  console.log("\n--- Deploying SentinelAccount ---");
+  const SentinelAccount = await ethers.getContractFactory("SentinelAccount");
+  const sentinelAccount = await SentinelAccount.deploy(guardAddr, registryAddr);
+  await sentinelAccount.waitForDeployment();
+  const sentinelAccountAddr = await sentinelAccount.getAddress();
+  console.log("SentinelAccount deployed to:", sentinelAccountAddr);
+
+  // 5. Write deployment info
   const deployment = {
     chainId: 10143,
     deployer: deployer.address,
@@ -37,6 +45,7 @@ async function main() {
       SentinelRegistry: registryAddr,
       SentinelGuard: guardAddr,
       P256PolicyAuth: p256Addr,
+      SentinelAccount: sentinelAccountAddr,
     },
     deployedAt: new Date().toISOString(),
   };

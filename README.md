@@ -41,6 +41,28 @@ The agent cannot bypass Sentinel. The guardrail logic lives in the smart contrac
 
 ## Architecture
 
+### Traditional Approach (Opt-in Middleware)
+```
+Agent EOA → calls Sentinel.executeWithGuardrails() → target contract
+Agent EOA → can also call target directly (BYPASS!)
+```
+*Problem: Agents can skip Sentinel entirely if they hold their own key.*
+
+### Sentinel's Approach (EIP-7702 Delegation — No Bypass)
+```
+Agent EOA = SentinelAccount contract (via EIP-7702 delegation)
+ALL transactions from that EOA go through Sentinel's guardrail checks
+No bypass possible — Sentinel IS the account
+```
+
+Sentinel uses **Monad's native EIP-7702 support** to make guardrails unbypassable. When an agent owner "upgrades to smart account," their agent's EOA delegates to `SentinelAccount` via a type `0x04` transaction. From that point, every transaction originating from that EOA executes through Sentinel's validation logic — spending limits, whitelists, time-locks, and circuit breaks are enforced at the account level, not the application level.
+
+**Why EIP-7702 on Monad:**
+- Monad has native EIP-7702 support — no separate bundler infrastructure needed
+- Delegation is permanent until revoked — agents can't opt-out mid-execution
+- Compatible with ERC-4337 for gas sponsorship and session keys
+- Agent gets smart wallet features (batching, social recovery) as a side effect
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │                    FRONTEND (React)                   │
@@ -72,6 +94,7 @@ The agent cannot bypass Sentinel. The guardrail logic lives in the smart contrac
 |---|---|---|
 | **SentinelRegistry** | `0xa49037d8e8c3d8d32f524bc70dd790ed1cee687d` | ERC-8004 agent registry |
 | **SentinelGuard** | `0x1b86A7dEe864f859127bE6Ff93DeA0342824d575` | Core guardrail engine |
+| **SentinelAccount** | *(deploying)* | EIP-7702 smart account — no-bypass guardrails |
 | **P256PolicyAuth** | `0x25375F29fC151f9A3fb0DF494C1c3a9603CB09D2` | Passkey authorization |
 
 **Chain:** Monad Testnet (Chain ID: 10143)  
@@ -86,7 +109,8 @@ The agent cannot bypass Sentinel. The guardrail logic lives in the smart contrac
 2. **Create Policy** -- Set spending limits, whitelists, time-locks, and circuit break thresholds. Use a preset (Conservative / Balanced / Aggressive) or configure manually. AI assistant available for natural language input.
 3. **Register Agent** -- Register your AI agent's address on-chain with Cleanverse identity verification and passkey authentication.
 4. **Assign Policy** -- Link a policy to your registered agent. The policy hash is stored on-chain.
-5. **Monitor** -- Watch the Activity Feed for real-time transaction checks. Pause agents instantly if something looks wrong.
+5. **Upgrade to Smart Account** -- Make guardrails unbypassable. Sign an EIP-7702 delegation to make Sentinel the agent's account itself. All transactions now go through Sentinel's checks.
+6. **Monitor** -- Watch the Activity Feed for real-time transaction checks. Pause agents instantly if something looks wrong.
 
 ---
 
