@@ -104,7 +104,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
           }],
         });
 
-        setTxHash(tx);
+        
         setUpgradeStatus("confirming");
         toast.success("Transaction submitted! Waiting for confirmation...");
 
@@ -155,7 +155,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
             }],
           });
 
-          setTxHash(tx);
+          
           setUpgradeStatus("confirming");
           toast.success("Transaction submitted! Waiting for confirmation...");
 
@@ -215,7 +215,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
           }],
         });
 
-        setTxHash(tx);
+        
         setUpgradeStatus("confirming");
 
         setTimeout(() => {
@@ -258,7 +258,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
             }],
           });
 
-          setTxHash(tx);
+          
           setUpgradeStatus("confirming");
 
           setTimeout(() => {
