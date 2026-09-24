@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useWallet } from "../context/WalletContext";
-import { CONTRACTS, isSmartAccountActive, getDelegationTarget, MONAD_EXPLORER } from "../config/contracts";
+import { CONTRACTS, isSmartAccountActive, getDelegationTarget } from "../config/contracts";
 
 interface SmartAccountUpgradeProps {
   agentAddress: string;
@@ -17,7 +17,6 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
   const [delegationTarget, setDelegationTarget] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>("idle");
-  const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const sentinelAccountAddr = CONTRACTS.SentinelAccount;
@@ -80,14 +79,6 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       // Create the EIP-7702 authorization tuple
       // The authorization is signed by the EOA and authorizes the delegation
       const chainId = (await browserProvider.getNetwork()).chainId;
-      
-      // EIP-7702 authorization structure:
-      // [chain_id, address, nonce, y_parity, r, s]
-      const authTuple = {
-        chainId: chainId,
-        address: sentinelAccountAddr,
-        nonce: nonce,
-      };
 
       // Sign the authorization using eth_signAuthorization (if supported)
       // This is a new JSON-RPC method for EIP-7702
