@@ -59,7 +59,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       setUpgradeStatus("signing");
       toast.info("Activating EIP-7702 Smart Account...");
 
-      // Call the relay endpoint (configurable via env, or use Vercel serverless)
+      // Call the relay endpoint
       const RELAY_URL = import.meta.env.VITE_RELAY_URL || "/api/delegate";
 
       const response = await fetch(RELAY_URL, {
@@ -78,10 +78,10 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       toast.info("Transaction submitted! Confirming on-chain...");
 
       // Wait for confirmation
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 8000));
 
       setUpgradeStatus("confirming");
-      toast.success(`Delegation TX: ${result.txHash}`);
+      toast.success(`Delegation TX: ${result.txHash?.slice(0, 10)}...`);
 
       // Check delegation status
       checkDelegation();
@@ -90,9 +90,21 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
 
     } catch (e: any) {
       console.error("Upgrade failed:", e);
+      // Fallback: check if agent is already delegated (relay might be down)
+      try {
+        const [active] = await Promise.all([
+          isSmartAccountActive(agentAddress),
+        ]);
+        if (active) {
+          checkDelegation();
+          setUpgradeStatus("success");
+          toast.success("Agent is already unbypassable!");
+          return;
+        }
+      } catch {}
       setError(e.message || "Upgrade failed");
       setUpgradeStatus("error");
-      toast.error(e.message || "Upgrade failed");
+      toast.error(e.message || "Upgrade failed — is the relay server running?");
     }
   }
 
