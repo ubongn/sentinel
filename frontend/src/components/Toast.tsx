@@ -10,8 +10,8 @@ export function parseContractError(err: any): string {
   const msg = err?.message || err?.toString() || "";
 
   // User rejected
-  if (msg.includes("user rejected") || msg.includes("User denied") || msg.includes("ACTION_REJECTED")) {
-    return "Transaction cancelled — try again when ready";
+  if (msg.includes("user rejected") || msg.includes("User denied") || msg.includes("ACTION_REJECTED") || msg.includes("ethers-user-denied")) {
+    return "Signature cancelled — approve the wallet popup to continue";
   }
 
   // Agent errors
