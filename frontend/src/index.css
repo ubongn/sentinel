@@ -671,6 +671,8 @@ a:hover {
   transition: box-shadow 0.15s ease;
 }
 .activity-item:hover { box-shadow: var(--shadow-sm); }
+.activity-item.activity-blocked { border-left: 3px solid #EF4444; background: #fef2f2; }
+.activity-item .reason { color: #EF4444; font-weight: 500; font-size: 12px; }
 .activity-icon { flex-shrink: 0; }
 .activity-content { flex: 1; min-width: 0; }
 .activity-header {

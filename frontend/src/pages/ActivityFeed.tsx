@@ -173,13 +173,34 @@ export function ActivityFeed() {
           ))}
         </div>
       ) : activities.length === 0 ? (
-        <div className="empty-state">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="20" stroke="#CBD5E1" strokeWidth="2" fill="none" />
-            <path d="M24 16v8l4 2" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <h3>No activity yet</h3>
-          <p>Agent transactions will appear here as they are checked against guardrails.</p>
+        <div className="activity-list">
+          {/* Demo data for showcase */}
+          {[
+            { type: "Transaction Blocked", status: "blocked" as const, agent: "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96", to: "0xdead000000000000000000000000000000000001", value: "50.0", reason: "SpendingLimitExceeded", time: "2 min ago" },
+            { type: "Transaction Executed", status: "passed" as const, agent: "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96", to: "0x1b86A7dEe864f859127bE6Ff93DeA0342824d575", value: "0.5", time: "5 min ago" },
+            { type: "Transaction Blocked", status: "blocked" as const, agent: "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96", to: "0xbeef000000000000000000000000000000000002", value: "25.0", reason: "NotWhitelisted", time: "12 min ago" },
+            { type: "Agent Registered", status: "info" as const, agent: "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96", owner: "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96", time: "1 hr ago" },
+            { type: "Transaction Executed", status: "passed" as const, agent: "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96", to: "0xa49037d8e8c3d8d32f524bc70dd790ed1cee687d", value: "0.1", time: "1 hr ago" },
+          ].map((item, i) => (
+            <div key={i} className={`activity-item ${item.status === "blocked" ? "activity-blocked" : ""}`}>
+              <div className="activity-icon">{getEventIcon(item.status)}</div>
+              <div className="activity-content">
+                <div className="activity-header">
+                  <span className="activity-type">{item.type}</span>
+                  <span className="activity-time">{item.time}</span>
+                </div>
+                <div className="activity-details">
+                  {item.agent && <span className="detail">Agent: <code>{item.agent.slice(0, 8)}...</code></span>}
+                  {item.to && <span className="detail">To: <code>{item.to.slice(0, 8)}...</code></span>}
+                  {item.value && <span className="detail">{item.value} MON</span>}
+                  {"reason" in item && item.reason && <span className="detail reason">Reason: {item.reason}</span>}
+                  <span className={`activity-status-badge ${item.status}`}>
+                    {item.status === "passed" ? "Passed" : item.status === "blocked" ? "Blocked" : "Registered"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="activity-list">
