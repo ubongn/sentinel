@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useWallet } from "../context/WalletContext";
 import { CONTRACTS, isSmartAccountActive, getDelegationTarget } from "../config/contracts";
