@@ -1,0 +1,7 @@
+{
+  "name": "sentinel-api",
+  "private": true,
+  "dependencies": {
+    "viem": "^2.37.0"
+  }
+}
