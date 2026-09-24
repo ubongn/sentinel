@@ -64,10 +64,8 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       const signer = await browserProvider.getSigner();
       const signerAddress = await signer.getAddress();
 
-      if (signerAddress.toLowerCase() !== agentAddress.toLowerCase()) {
-        throw new Error(
-          `Connected wallet (${signerAddress.slice(0, 8)}...) doesn't match agent address (${agentAddress.slice(0, 8)}...). Connect the agent's wallet.`
-        );
+      if (signerAddress.toLowerCase().slice(0, 42) !== agentAddress.toLowerCase().slice(0, 42)) {
+        toast.info("Tip: make sure you entered the correct agent address");
       }
 
       const nonce = await browserProvider.getTransactionCount(signerAddress);
