@@ -25,7 +25,7 @@ const server = http_1.createServer(async (req, res) => {
     try {
       let body = "";
       for await (const chunk of req) body += chunk;
-      const { agentAddress } = JSON.parse(body);
+      const { agentAddress, remove } = JSON.parse(body);
 
       if (!agentAddress || !agentAddress.startsWith("0x")) {
         res.writeHead(400, { "Content-Type": "application/json" });
@@ -33,7 +33,7 @@ const server = http_1.createServer(async (req, res) => {
         return;
       }
 
-      console.log(`Delegating ${agentAddress} to SentinelAccount...`);
+      console.log(`${remove ? "Removing" : "Adding"} delegation for ${agentAddress}...`);
 
       const account = privateKeyToAccount(RELAYER_KEY);
       const client = createWalletClient({
@@ -42,10 +42,10 @@ const server = http_1.createServer(async (req, res) => {
         transport: http("https://testnet-rpc.monad.xyz"),
       });
 
-      // Sign7702 authorization
+      // Sign7702 authorization (either add or remove delegation)
       const authorization = await client.signAuthorization({
         account,
-        contractAddress: SENTINEL_ACCOUNT,
+        contractAddress: remove ? "0x0000000000000000000000000000000000000000" : SENTINEL_ACCOUNT,
       });
 
       // Send the7702 transaction
@@ -57,14 +57,14 @@ const server = http_1.createServer(async (req, res) => {
         value: 0n,
       });
 
-      console.log(`7702 delegation TX: ${hash}`);
+      console.log(`7702 ${remove ? "remove" : "add"} delegation TX: ${hash}`);
 
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({
         success: true,
         txHash: hash,
         explorer: `https://testnet.monadexplorer.com/tx/${hash}`,
-        message: "Agent is now unbypassable via EIP-7702"
+        message: remove ? "Delegation removed" : "Agent is now unbypassable via EIP-7702"
       }));
 
     } catch (e) {

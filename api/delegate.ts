@@ -19,7 +19,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (req.method === "POST") {
     try {
-      const { agentAddress } = await req.json();
+      const { agentAddress, remove } = await req.json();
 
       if (!agentAddress || !agentAddress.startsWith("0x")) {
         return new Response(
@@ -28,7 +28,7 @@ export default async function handler(req: Request): Promise<Response> {
         );
       }
 
-      console.log(`Delegating ${agentAddress} to SentinelAccount...`);
+      console.log(`${remove ? "Removing" : "Adding"} delegation for ${agentAddress}...`);
 
       const account = privateKeyToAccount(RELAYER_KEY as `0x${string}`);
       const client = createWalletClient({
@@ -37,10 +37,10 @@ export default async function handler(req: Request): Promise<Response> {
         transport: http("https://testnet-rpc.monad.xyz"),
       });
 
-      // Sign7702 authorization
+      // Sign7702 authorization (either add or remove delegation)
       const authorization = await client.signAuthorization({
         account,
-        contractAddress: SENTINEL_ACCOUNT as `0x${string}`,
+        contractAddress: remove ? "0x0000000000000000000000000000000000000000" : SENTINEL_ACCOUNT as `0x${string}`,
       });
 
       // Send the7702 transaction
@@ -52,14 +52,14 @@ export default async function handler(req: Request): Promise<Response> {
         value: 0n,
       });
 
-      console.log(`7702 delegation TX: ${hash}`);
+      console.log(`7702 ${remove ? "remove" : "add"} delegation TX: ${hash}`);
 
       return new Response(
         JSON.stringify({
           success: true,
           txHash: hash,
           explorer: `https://testnet.monadexplorer.com/tx/${hash}`,
-          message: "Agent is now unbypassable via EIP-7702",
+          message: remove ? "Delegation removed" : "Agent is now unbypassable via EIP-7702",
         }),
         { status: 200, headers: { ...headers, "Content-Type": "application/json" } }
       );

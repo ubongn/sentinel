@@ -107,85 +107,34 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       setUpgradeStatus("signing");
       toast.info("Removing EIP-7702 delegation...");
 
-      const browserProvider = new ethers.BrowserProvider(walletProvider);
-      const signer = await browserProvider.getSigner();
-      const signerAddress = await signer.getAddress();
+      // Call the relay endpoint to remove delegation
+      const RELAY_URL = import.meta.env.VITE_RELAY_URL || "/api/delegate";
 
-      const nonce = await browserProvider.getTransactionCount(signerAddress);
-      const chainId = (await browserProvider.getNetwork()).chainId;
+      const response = await fetch(RELAY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentAddress: agentAddress, remove: true }),
+      });
 
-      try {
-        const authorization = await walletProvider.request({
-          method: "eth_signAuthorization",
-          params: [signerAddress, ethers.ZeroAddress, chainId.toString(16), nonce.toString(16)],
-        });
+      const result = await response.json();
 
-        setUpgradeStatus("submitting");
-
-        await walletProvider.request({
-          method: "eth_sendTransaction",
-          params: [{
-            from: signerAddress,
-            to: signerAddress,
-            data: "0x",
-            value: "0x0",
-            authorizationList: [authorization],
-            type: "0x04",
-          }],
-        });
-
-        setUpgradeStatus("confirming");
-
-        setTimeout(() => {
-          checkDelegation();
-          setUpgradeStatus("idle");
-          toast.success("Delegation removed. Agent reverted to opt-in mode.");
-        }, 5000);
-
-      } catch (signError: any) {
-        if (signError.message?.includes("Method not found") || signError.code === -32601) {
-          toast.info("Using alternative method...");
-
-          const authHash = ethers.solidityPackedKeccak256(
-            ["uint256", "address", "uint256"],
-            [chainId, ethers.ZeroAddress, nonce]
-          );
-
-          const signature = await signer.signMessage(ethers.getBytes(authHash));
-          const sig = ethers.Signature.from(signature);
-
-          setUpgradeStatus("submitting");
-
-          await walletProvider.request({
-            method: "eth_sendTransaction",
-            params: [{
-              from: signerAddress,
-              to: signerAddress,
-              data: "0x",
-              value: "0x0",
-              authorizationList: [{
-                chainId: chainId.toString(16),
-                address: ethers.ZeroAddress,
-                nonce: nonce.toString(16),
-                yParity: sig.v === 27 ? "0x0" : "0x1",
-                r: sig.r,
-                s: sig.s,
-              }],
-              type: "0x04",
-            }],
-          });
-
-          setUpgradeStatus("confirming");
-
-          setTimeout(() => {
-            checkDelegation();
-            setUpgradeStatus("idle");
-            toast.success("Delegation removed. Agent reverted to opt-in mode.");
-          }, 5000);
-        } else {
-          throw signError;
-        }
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to remove delegation");
       }
+
+      setUpgradeStatus("submitting");
+      toast.info("Transaction submitted! Confirming on-chain...");
+
+      // Wait for confirmation
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      setUpgradeStatus("confirming");
+      toast.success(`Delegation removed TX: ${result.txHash}`);
+
+      // Check delegation status
+      checkDelegation();
+      setUpgradeStatus("idle");
+      toast.success("Delegation removed. Agent reverted to opt-in mode.");
 
     } catch (e: any) {
       console.error("Remove delegation failed:", e);
