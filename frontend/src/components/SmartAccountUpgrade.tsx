@@ -58,97 +58,36 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
 
     try {
       setUpgradeStatus("signing");
-      toast.info("Step 1/2: Sign the EIP-7702 authorization...");
+      toast.info("Activating EIP-7702 Smart Account...");
 
-      const browserProvider = new ethers.BrowserProvider(walletProvider);
-      const signer = await browserProvider.getSigner();
-      const signerAddress = await signer.getAddress();
+      // Call the relay endpoint (configurable via env, or use Vercel serverless)
+      const RELAY_URL = import.meta.env.VITE_RELAY_URL || "/api/delegate";
 
-      if (signerAddress.toLowerCase().slice(0, 42) !== agentAddress.toLowerCase().slice(0, 42)) {
-        toast.info("Tip: make sure you entered the correct agent address");
+      const response = await fetch(RELAY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentAddress: agentAddress }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Delegation failed");
       }
 
-      const nonce = await browserProvider.getTransactionCount(signerAddress);
-      const chainId = (await browserProvider.getNetwork()).chainId;
+      setUpgradeStatus("submitting");
+      toast.info("Transaction submitted! Confirming on-chain...");
 
-      // Try eth_signAuthorization first (wallets that support EIP-7702 natively)
-      try {
-        const authorization = await walletProvider.request({
-          method: "eth_signAuthorization",
-          params: [signerAddress, sentinelAccountAddr, chainId.toString(16), nonce.toString(16)],
-        });
+      // Wait for confirmation
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
-        setUpgradeStatus("submitting");
-        toast.info("Step 2/2: Submitting delegation transaction...");
+      setUpgradeStatus("confirming");
+      toast.success(`Delegation TX: ${result.txHash}`);
 
-        await walletProvider.request({
-          method: "eth_sendTransaction",
-          params: [{
-            from: signerAddress,
-            to: signerAddress,
-            data: "0x",
-            value: "0x0",
-            authorizationList: [authorization],
-            type: "0x04",
-          }],
-        });
-
-        setUpgradeStatus("confirming");
-        toast.success("Transaction submitted! Waiting for confirmation...");
-
-        setTimeout(() => {
-          checkDelegation();
-          setUpgradeStatus("success");
-          toast.success("Smart Account activated! Agent is now unbypassable.");
-        }, 5000);
-
-      } catch (signError: any) {
-        // Fallback: sign authorization hash with personal_sign
-        if (signError.message?.includes("Method not found") || signError.code === -32601) {
-          toast.info("Using alternative signing method...");
-
-          const authHash = ethers.solidityPackedKeccak256(
-            ["uint256", "address", "uint256"],
-            [chainId, sentinelAccountAddr, nonce]
-          );
-
-          const signature = await signer.signMessage(ethers.getBytes(authHash));
-          const sig = ethers.Signature.from(signature);
-
-          setUpgradeStatus("submitting");
-          toast.info("Step 2/2: Submitting delegation transaction...");
-
-          await walletProvider.request({
-            method: "eth_sendTransaction",
-            params: [{
-              from: signerAddress,
-              to: signerAddress,
-              data: "0x",
-              value: "0x0",
-              authorizationList: [{
-                chainId: chainId.toString(16),
-                address: sentinelAccountAddr,
-                nonce: nonce.toString(16),
-                yParity: sig.v === 27 ? "0x0" : "0x1",
-                r: sig.r,
-                s: sig.s,
-              }],
-              type: "0x04",
-            }],
-          });
-
-          setUpgradeStatus("confirming");
-          toast.success("Transaction submitted! Waiting for confirmation...");
-
-          setTimeout(() => {
-            checkDelegation();
-            setUpgradeStatus("success");
-            toast.success("Smart Account activated! Agent is now unbypassable.");
-          }, 5000);
-        } else {
-          throw signError;
-        }
-      }
+      // Check delegation status
+      checkDelegation();
+      setUpgradeStatus("success");
+      toast.success("Smart Account activated! Agent is now unbypassable.");
 
     } catch (e: any) {
       console.error("Upgrade failed:", e);
