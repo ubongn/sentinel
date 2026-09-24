@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "sonner";
-import { useWallet } from "../context/WalletContext";
-import { CONTRACTS, isSmartAccountActive, getDelegationTarget, MONAD_EXPLORER } from "../config/contracts";
+import { CONTRACTS, isSmartAccountActive, getDelegationTarget } from "../config/contracts";
 
 interface SmartAccountUpgradeProps {
   agentAddress: string;
@@ -9,7 +7,6 @@ interface SmartAccountUpgradeProps {
 }
 
 export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccountUpgradeProps) {
-  const { provider } = useWallet();
   const [isSmartAccount, setIsSmartAccount] = useState(false);
   const [delegationTarget, setDelegationTarget] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
