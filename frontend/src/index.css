@@ -1932,6 +1932,103 @@ a:hover {
   .preset-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Smart Account Upgrade ── */
+.smart-account-upgrade {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  border: 1px solid var(--border);
+}
+.delegation-active {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.delegation-active .status-badge.active {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 2px solid #22c55e;
+  border-radius: var(--radius-lg);
+  color: #166534;
+  font-size: 16px;
+  font-weight: 700;
+  width: fit-content;
+}
+.delegation-active .shield-icon { font-size: 20px; }
+.delegation-active .status-description {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 500px;
+}
+.delegation-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  width: fit-content;
+}
+.delegation-details .detail-label {
+  font-size: 13px;
+  color: #64748b;
+}
+.delegation-details .detail-value {
+  font-size: 13px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #334155;
+}
+.delegation-inactive {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.delegation-inactive .status-badge.warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 2px solid #f59e0b;
+  border-radius: var(--radius-lg);
+  color: #92400e;
+  font-size: 16px;
+  font-weight: 700;
+  width: fit-content;
+}
+.delegation-inactive .warning-icon { font-size: 20px; }
+.delegation-inactive .status-description {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.upgrade-note, .monad-note {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.6;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.monad-note { background: #faf5ff; border-color: #e9d5ff; color: #6b21a8; }
+.checking-delegation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #64748b;
+  font-size: 14px;
+  padding: 20px 0;
+}
+
 /* ── Activity Status Badges ── */
 .activity-status-badge {
   display: inline-flex;
