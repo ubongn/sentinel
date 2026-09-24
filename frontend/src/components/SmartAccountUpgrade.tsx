@@ -55,33 +55,25 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
     }
 
     setError(null);
-    setTxHash(null);
 
     try {
       setUpgradeStatus("signing");
       toast.info("Step 1/2: Sign the EIP-7702 authorization...");
 
-      // Use ethers.js BrowserProvider for JSON-RPC accounts
       const browserProvider = new ethers.BrowserProvider(walletProvider);
       const signer = await browserProvider.getSigner();
       const signerAddress = await signer.getAddress();
 
-      // Verify the connected wallet matches the agent address
       if (signerAddress.toLowerCase() !== agentAddress.toLowerCase()) {
         throw new Error(
           `Connected wallet (${signerAddress.slice(0, 8)}...) doesn't match agent address (${agentAddress.slice(0, 8)}...). Connect the agent's wallet.`
         );
       }
 
-      // Get current nonce for the authorization
       const nonce = await browserProvider.getTransactionCount(signerAddress);
-
-      // Create the EIP-7702 authorization tuple
-      // The authorization is signed by the EOA and authorizes the delegation
       const chainId = (await browserProvider.getNetwork()).chainId;
 
-      // Sign the authorization using eth_signAuthorization (if supported)
-      // This is a new JSON-RPC method for EIP-7702
+      // Try eth_signAuthorization first (wallets that support EIP-7702 natively)
       try {
         const authorization = await walletProvider.request({
           method: "eth_signAuthorization",
@@ -91,8 +83,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
         setUpgradeStatus("submitting");
         toast.info("Step 2/2: Submitting delegation transaction...");
 
-        // Send the7702 transaction with the signed authorization
-        const tx = await walletProvider.request({
+        await walletProvider.request({
           method: "eth_sendTransaction",
           params: [{
             from: signerAddress,
@@ -100,15 +91,13 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
             data: "0x",
             value: "0x0",
             authorizationList: [authorization],
-            type: "0x04", // EIP-7702 transaction type
+            type: "0x04",
           }],
         });
 
-        
         setUpgradeStatus("confirming");
         toast.success("Transaction submitted! Waiting for confirmation...");
 
-        // Wait a few seconds then check delegation status
         setTimeout(() => {
           checkDelegation();
           setUpgradeStatus("success");
@@ -116,27 +105,22 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
         }, 5000);
 
       } catch (signError: any) {
-        // If eth_signAuthorization is not supported, try alternative approach
+        // Fallback: sign authorization hash with personal_sign
         if (signError.message?.includes("Method not found") || signError.code === -32601) {
-          // Fallback: Use personal_sign to sign the authorization hash
-          // This is a workaround for wallets that don't support eth_signAuthorization
           toast.info("Using alternative signing method...");
-          
-          // Create the authorization hash manually
+
           const authHash = ethers.solidityPackedKeccak256(
             ["uint256", "address", "uint256"],
             [chainId, sentinelAccountAddr, nonce]
           );
-          
-          // Sign the hash
+
           const signature = await signer.signMessage(ethers.getBytes(authHash));
           const sig = ethers.Signature.from(signature);
-          
+
           setUpgradeStatus("submitting");
           toast.info("Step 2/2: Submitting delegation transaction...");
 
-          // Send the7702 transaction with the signature
-          const tx = await walletProvider.request({
+          await walletProvider.request({
             method: "eth_sendTransaction",
             params: [{
               from: signerAddress,
@@ -155,7 +139,6 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
             }],
           });
 
-          
           setUpgradeStatus("confirming");
           toast.success("Transaction submitted! Waiting for confirmation...");
 
@@ -190,11 +173,10 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       const browserProvider = new ethers.BrowserProvider(walletProvider);
       const signer = await browserProvider.getSigner();
       const signerAddress = await signer.getAddress();
-      
+
       const nonce = await browserProvider.getTransactionCount(signerAddress);
       const chainId = (await browserProvider.getNetwork()).chainId;
 
-      // Sign authorization to delegate to address(0) - removes delegation
       try {
         const authorization = await walletProvider.request({
           method: "eth_signAuthorization",
@@ -202,8 +184,8 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
         });
 
         setUpgradeStatus("submitting");
-        
-        const tx = await walletProvider.request({
+
+        await walletProvider.request({
           method: "eth_sendTransaction",
           params: [{
             from: signerAddress,
@@ -215,7 +197,6 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
           }],
         });
 
-        
         setUpgradeStatus("confirming");
 
         setTimeout(() => {
@@ -226,20 +207,19 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
 
       } catch (signError: any) {
         if (signError.message?.includes("Method not found") || signError.code === -32601) {
-          // Fallback for remove
           toast.info("Using alternative method...");
-          
+
           const authHash = ethers.solidityPackedKeccak256(
             ["uint256", "address", "uint256"],
             [chainId, ethers.ZeroAddress, nonce]
           );
-          
+
           const signature = await signer.signMessage(ethers.getBytes(authHash));
           const sig = ethers.Signature.from(signature);
-          
+
           setUpgradeStatus("submitting");
-          
-          const tx = await walletProvider.request({
+
+          await walletProvider.request({
             method: "eth_sendTransaction",
             params: [{
               from: signerAddress,
@@ -258,7 +238,6 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
             }],
           });
 
-          
           setUpgradeStatus("confirming");
 
           setTimeout(() => {
