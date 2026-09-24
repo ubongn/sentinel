@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createWalletClient, custom } from "viem";
 import { monadTestnet } from "viem/chains";
 import { toast } from "sonner";
+import { useWallet } from "../context/WalletContext";
 import { CONTRACTS, isSmartAccountActive, getDelegationTarget, MONAD_EXPLORER } from "../config/contracts";
 
 interface SmartAccountUpgradeProps {
@@ -14,6 +15,7 @@ interface SmartAccountUpgradeProps {
 type UpgradeStatus = "idle" | "signing" | "submitting" | "confirming" | "success" | "error";
 
 export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccountUpgradeProps) {
+  const { provider } = useWallet();
   const [isSmartAccount, setIsSmartAccount] = useState(false);
   const [delegationTarget, setDelegationTarget] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
@@ -52,8 +54,8 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
    * 2. Submit type 0x04 transaction with the authorization
    */
   async function handleUpgrade() {
-    if (!window.ethereum) {
-      toast.error("No wallet found. Install MetaMask or another EVM wallet.");
+    if (!provider) {
+      toast.error("Connect your wallet first");
       return;
     }
 
@@ -70,9 +72,14 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       setUpgradeStatus("signing");
       toast.info("Step 1/2: Sign the EIP-7702 authorization in your wallet...");
 
+      if (!provider) {
+        toast.error("Connect your wallet first");
+        return;
+      }
+
       const walletClient = createWalletClient({
         chain: monadTestnet,
-        transport: custom(window.ethereum),
+        transport: custom(provider),
       });
 
       // Get the connected account
@@ -133,7 +140,10 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
    * Remove delegation (revert to normal EOA)
    */
   async function handleRemoveDelegation() {
-    if (!window.ethereum) return;
+    if (!provider) {
+      toast.error("Connect your wallet first");
+      return;
+    }
 
     try {
       setUpgradeStatus("signing");
@@ -141,7 +151,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
 
       const walletClient = createWalletClient({
         chain: monadTestnet,
-        transport: custom(window.ethereum),
+        transport: custom(provider),
       });
 
       const [account] = await walletClient.getAddresses();
