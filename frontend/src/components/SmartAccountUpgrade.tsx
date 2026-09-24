@@ -55,56 +55,62 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
 
     setError(null);
 
+    // Step 1: Check if already delegated (instant, no relay needed)
+    try {
+      const active = await isSmartAccountActive(agentAddress);
+      if (active) {
+        checkDelegation();
+        setUpgradeStatus("success");
+        toast.success("Agent is already unbypassable!");
+        return;
+      }
+    } catch {}
+
+    // Step 2: Try relay endpoint with10s timeout
     try {
       setUpgradeStatus("signing");
       toast.info("Activating EIP-7702 Smart Account...");
 
-      // Call the relay endpoint
       const RELAY_URL = import.meta.env.VITE_RELAY_URL || "/api/delegate";
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(RELAY_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentAddress: agentAddress }),
+        body: JSON.stringify({ agentAddress }),
+        signal: controller.signal,
       });
 
-      const result = await response.json();
+      clearTimeout(timeout);
 
       if (!response.ok) {
-        throw new Error(result.error || "Delegation failed");
+        const text = await response.text();
+        let errorMsg = "Delegation failed";
+        try { errorMsg = JSON.parse(text).error || errorMsg; } catch {}
+        throw new Error(errorMsg);
       }
 
-      setUpgradeStatus("submitting");
-      toast.info("Transaction submitted! Confirming on-chain...");
+      await response.json();
 
-      // Wait for confirmation
+      setUpgradeStatus("submitting");
+      toast.info("TX submitted! Waiting for confirmation...");
+
       await new Promise(resolve => setTimeout(resolve, 8000));
 
-      setUpgradeStatus("confirming");
-      toast.success(`Delegation TX: ${result.txHash?.slice(0, 10)}...`);
-
-      // Check delegation status
       checkDelegation();
       setUpgradeStatus("success");
       toast.success("Smart Account activated! Agent is now unbypassable.");
 
     } catch (e: any) {
       console.error("Upgrade failed:", e);
-      // Fallback: check if agent is already delegated (relay might be down)
-      try {
-        const [active] = await Promise.all([
-          isSmartAccountActive(agentAddress),
-        ]);
-        if (active) {
-          checkDelegation();
-          setUpgradeStatus("success");
-          toast.success("Agent is already unbypassable!");
-          return;
-        }
-      } catch {}
-      setError(e.message || "Upgrade failed");
+      const msg = e.name === "AbortError"
+        ? "Relay server is offline. Start it with: cd relay && start-relay.bat"
+        : e.message || "Upgrade failed";
+      setError(msg);
       setUpgradeStatus("error");
-      toast.error(e.message || "Upgrade failed — is the relay server running?");
+      toast.error(msg);
     }
   }
 
@@ -118,40 +124,46 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       setUpgradeStatus("signing");
       toast.info("Removing EIP-7702 delegation...");
 
-      // Call the relay endpoint to remove delegation
       const RELAY_URL = import.meta.env.VITE_RELAY_URL || "/api/delegate";
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(RELAY_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentAddress: agentAddress, remove: true }),
+        body: JSON.stringify({ agentAddress, remove: true }),
+        signal: controller.signal,
       });
 
-      const result = await response.json();
+      clearTimeout(timeout);
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to remove delegation");
+        const text = await response.text();
+        let errorMsg = "Failed to remove delegation";
+        try { errorMsg = JSON.parse(text).error || errorMsg; } catch {}
+        throw new Error(errorMsg);
       }
 
+      await response.json();
+
       setUpgradeStatus("submitting");
-      toast.info("Transaction submitted! Confirming on-chain...");
+      toast.info("TX submitted! Waiting for confirmation...");
 
-      // Wait for confirmation
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 8000));
 
-      setUpgradeStatus("confirming");
-      toast.success(`Delegation removed TX: ${result.txHash}`);
-
-      // Check delegation status
       checkDelegation();
       setUpgradeStatus("idle");
       toast.success("Delegation removed. Agent reverted to opt-in mode.");
 
     } catch (e: any) {
       console.error("Remove delegation failed:", e);
-      setError(e.message || "Failed to remove delegation");
+      const msg = e.name === "AbortError"
+        ? "Relay server is offline. Start it with: cd relay && start-relay.bat"
+        : e.message || "Failed to remove delegation";
+      setError(msg);
       setUpgradeStatus("error");
-      toast.error(e.message || "Failed to remove delegation");
+      toast.error(msg);
     }
   }
 
