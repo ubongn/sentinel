@@ -236,40 +236,36 @@ export function ConnectButton() {
               </button>
             ))}
 
-            {/* Fallback for window.ethereum */}
-            {typeof window !== "undefined" && (window as any).ethereum && (
-              <>
-                <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "4px 0" }} />
-                <button className="wallet-option wallet-option-fallback" onClick={connectFallback}>
-                  <span className="wallet-icon-placeholder" />
-                  <span>Other Wallet</span>
-                </button>
-              </>
-            )}
-
-            {/* Install suggestions */}
-            <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "4px 0" }} />
-            <div style={{ padding: "6px 12px", fontSize: 11, opacity: 0.5, fontWeight: 600 }}>
-              More Wallets
-            </div>
-            {popularWallets
-              .filter(w => !wallets.some(d => d.info.name.toLowerCase().includes(w.name.toLowerCase().split(" ")[0])))
-              .map((wallet) => (
-                <a
-                  key={wallet.name}
-                  href={wallet.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="wallet-option"
-                  onClick={() => setShowSelector(false)}
-                  style={{ textDecoration: "none", opacity: 0.7 }}
-                >
-                  <span style={{ fontSize: 18 }}>{wallet.icon}</span>
-                  <span>{wallet.name}</span>
-                  <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.5 }}>Install</span>
-                </a>
-              ))
-            }
+            {/* Install suggestions for wallets not detected */}
+            {(() => {
+              const missing = popularWallets.filter(
+                w => !wallets.some(d => d.info.name.toLowerCase().includes(w.name.toLowerCase().split(" ")[0]))
+              );
+              if (missing.length === 0) return null;
+              return (
+                <>
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "4px 0" }} />
+                  <div style={{ padding: "6px 12px", fontSize: 11, opacity: 0.5, fontWeight: 600 }}>
+                    More Wallets
+                  </div>
+                  {missing.map((wallet) => (
+                    <a
+                      key={wallet.name}
+                      href={wallet.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="wallet-option"
+                      onClick={() => setShowSelector(false)}
+                      style={{ textDecoration: "none", opacity: 0.7 }}
+                    >
+                      <span style={{ fontSize: 18 }}>{wallet.icon}</span>
+                      <span>{wallet.name}</span>
+                      <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.5 }}>Install</span>
+                    </a>
+                  ))}
+                </>
+              );
+            })()}
           </div>
         </>
       )}
