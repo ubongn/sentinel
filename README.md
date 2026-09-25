@@ -127,22 +127,24 @@ Sentinel uses **Monad's native EIP-7702 support** to make guardrails unbypassabl
 
 ---
 
-## Bounty Integrations
+## Bounty Integrations (Monad Metropolis)
 
-### Dynamic SDK ($5K)
-Wallet connection via Dynamic SDK with multi-wallet support and embedded wallets for agent identities.
+Sentinel targets5 sponsor bounties with deep, meaningful integrations:
 
-### Mera Passkey Auth ($5K)
-WebAuthn passkey registration and policy authorization using Monad's native P256 precompile. No seed phrases.
+### 🏆 Dynamic — Smart Account Activation
+EIP-7702 delegation makes Sentinel the agent's account itself. Every transaction routes through SentinelAccount — no bypass possible. This is the core differentiator.
 
-### Chainlink CRE ($3K)
-Automated circuit breaker monitoring with spending threshold detection and configurable time windows.
+### 🏆 Mera — AI Agent Infrastructure
+Sentinel IS agent infrastructure. On-chain guardrails for autonomous AI agents: spending limits, whitelists, time-locks, and circuit breaks. Policy enforcement at the smart contract level.
 
-### Qwen 3.8 Max ($5K credits)
-AI Policy Assistant for natural language policy configuration. "Limit my agent to 1 MON per transaction, whitelist only Uniswap" produces a working policy.
+### 🏆 Qwen AI — Intelligent Policy Configuration
+AI Policy Assistant powered by Qwen3.8 Max. Natural language policy creation: "Limit my agent to1 MON per transaction, whitelist only Uniswap" produces a working on-chain policy.
 
-### Cleanverse ($2K)
-Identity verification gate for agent registration with CVI (Cleanverse Verification Index) scoring.
+### 🏆 Cleanverse — Agent Identity Verification
+On-chain agent identity via ERC-8004 registry. Every registered agent gets a verifiable on-chain identity with Cleanverse verification and passkey authentication.
+
+### 🏆 Chainlink CRE — Verifiable On-Chain Compute
+Policy evaluation is verifiable on-chain compute. Every guardrail check (spending limits, whitelist, time-lock, circuit break) executes on-chain — trustless, auditable, no off-chain dependency.
 
 ---
 
