@@ -144,16 +144,61 @@ export function ConnectButton() {
     );
   }
 
-  // No wallets detected via EIP-6963 — show single connect button
+  // Popular wallets with install links
+  const popularWallets = [
+    { name: "MetaMask", url: "https://metamask.io/download/", icon: "🦊" },
+    { name: "OKX Wallet", url: "https://www.okx.com/web3", icon: "⭕" },
+    { name: "Coinbase Wallet", url: "https://www.coinbase.com/wallet", icon: "🔵" },
+    { name: "Rabby", url: "https://rabby.io/", icon: "🐰" },
+  ];
+
+  // No wallets detected via EIP-6963 — show install suggestions
   if (wallets.length === 0) {
     return (
-      <button
-        className="connect-btn"
-        onClick={connectFallback}
-        disabled={connecting}
-      >
-        {connecting ? "Connecting..." : "Connect Wallet"}
-      </button>
+      <div style={{ position: "relative" }}>
+        <button
+          className="connect-btn"
+          onClick={() => {
+            if (typeof window !== "undefined" && (window as any).ethereum) {
+              connectFallback();
+            } else {
+              setShowSelector(!showSelector);
+            }
+          }}
+          disabled={connecting}
+        >
+          {connecting ? "Connecting..." : "Connect Wallet"}
+        </button>
+
+        {showSelector && (
+          <>
+            <div
+              style={{ position: "fixed", inset: 0, zIndex: 999 }}
+              onClick={() => setShowSelector(false)}
+            />
+            <div className="wallet-selector" style={{ position: "absolute", top: "100%", right: 0, zIndex: 1000, marginTop: 4, minWidth: 240 }}>
+              <div style={{ padding: "8px 12px", fontSize: 12, opacity: 0.6, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Install a Wallet
+              </div>
+              {popularWallets.map((wallet) => (
+                <a
+                  key={wallet.name}
+                  href={wallet.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="wallet-option"
+                  onClick={() => setShowSelector(false)}
+                  style={{ textDecoration: "none" }}
+                >
+                  <span style={{ fontSize: 20 }}>{wallet.icon}</span>
+                  <span>{wallet.name}</span>
+                  <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.5 }}>Install →</span>
+                </a>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     );
   }
 
@@ -174,7 +219,8 @@ export function ConnectButton() {
             style={{ position: "fixed", inset: 0, zIndex: 999 }}
             onClick={() => setShowSelector(false)}
           />
-          <div className="wallet-selector" style={{ position: "absolute", top: "100%", right: 0, zIndex: 1000, marginTop: 4 }}>
+          <div className="wallet-selector" style={{ position: "absolute", top: "100%", right: 0, zIndex: 1000, marginTop: 4, minWidth: 220 }}>
+            {/* Detected wallets */}
             {wallets.map((wallet) => (
               <button
                 key={wallet.info.uuid}
@@ -189,11 +235,41 @@ export function ConnectButton() {
                 <span>{wallet.info.name}</span>
               </button>
             ))}
+
+            {/* Fallback for window.ethereum */}
+            {typeof window !== "undefined" && (window as any).ethereum && (
+              <>
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "4px 0" }} />
+                <button className="wallet-option wallet-option-fallback" onClick={connectFallback}>
+                  <span className="wallet-icon-placeholder" />
+                  <span>Other Wallet</span>
+                </button>
+              </>
+            )}
+
+            {/* Install suggestions */}
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "4px 0" }} />
-            <button className="wallet-option wallet-option-fallback" onClick={connectFallback}>
-              <span className="wallet-icon-placeholder" />
-              <span>Other Wallet</span>
-            </button>
+            <div style={{ padding: "6px 12px", fontSize: 11, opacity: 0.5, fontWeight: 600 }}>
+              More Wallets
+            </div>
+            {popularWallets
+              .filter(w => !wallets.some(d => d.info.name.toLowerCase().includes(w.name.toLowerCase().split(" ")[0])))
+              .map((wallet) => (
+                <a
+                  key={wallet.name}
+                  href={wallet.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="wallet-option"
+                  onClick={() => setShowSelector(false)}
+                  style={{ textDecoration: "none", opacity: 0.7 }}
+                >
+                  <span style={{ fontSize: 18 }}>{wallet.icon}</span>
+                  <span>{wallet.name}</span>
+                  <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.5 }}>Install</span>
+                </a>
+              ))
+            }
           </div>
         </>
       )}
