@@ -230,6 +230,41 @@ export function Landing() {
         </div>
       </section>
 
+      {/* ── Built For (Bounty Sponsors) ── */}
+      <section className="primitives" style={{ background: "rgba(124,58,237,0.04)" }}>
+        <h2>Built For</h2>
+        <p className="section-subtitle">
+          Sentinel integrates with Monad Metropolis sponsor ecosystems.
+        </p>
+        <div className="primitives-grid">
+          <div className="primitive-card">
+            <div className="primitive-tag">Smart Accounts</div>
+            <h3>Dynamic</h3>
+            <p>EIP-7702 smart account delegation for unbypassable agent guardrails. Every transaction routes through SentinelAccount.</p>
+          </div>
+          <div className="primitive-card">
+            <div className="primitive-tag">AI Infrastructure</div>
+            <h3>Mera</h3>
+            <p>On-chain guardrail infrastructure for autonomous AI agents. Policy enforcement at the smart contract level.</p>
+          </div>
+          <div className="primitive-card">
+            <div className="primitive-tag">AI Integration</div>
+            <h3>Qwen AI</h3>
+            <p>AI-powered policy recommendations and intelligent guardrail configuration for agent safety.</p>
+          </div>
+          <div className="primitive-card">
+            <div className="primitive-tag">Identity</div>
+            <h3>Cleanverse</h3>
+            <p>On-chain agent identity verification via ERC-8004 registry. Every agent gets a verifiable on-chain identity.</p>
+          </div>
+          <div className="primitive-card">
+            <div className="primitive-tag">Verifiable Compute</div>
+            <h3>Chainlink CRE</h3>
+            <p>Policy evaluation as verifiable on-chain compute. Every guardrail check is trustless and auditable.</p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Contract Addresses ── */}
       <section className="contracts-section">
         <h2>Deployed Contracts</h2>
