@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useWallet } from "../context/WalletContext";
+import { useWallet, wasDisconnected } from "../context/WalletContext";
 
 interface WalletProviderInfo {
   info: { uuid: string; name: string; icon: string; rdns: string };
@@ -38,9 +38,10 @@ export function ConnectButton() {
     };
   }, []);
 
-  // Auto-reconnect on page refresh
+  // Auto-reconnect on page refresh (only if user didn't explicitly disconnect)
   useEffect(() => {
     if (address || reconnectAttempted || !savedRdns || wallets.length === 0) return;
+    if (wasDisconnected()) return;
     setReconnectAttempted(true);
 
     const saved = wallets.find(w => w.info.rdns === savedRdns);
@@ -53,9 +54,10 @@ export function ConnectButton() {
     }
   }, [wallets, savedRdns, address, reconnectAttempted, setWallet]);
 
-  // Fallback: window.ethereum for non-EIP-6963 wallets
+  // Fallback: window.ethereum for non-EIP-6963 wallets (only if user didn't explicitly disconnect)
   useEffect(() => {
     if (address || reconnectAttempted || wallets.length > 0) return;
+    if (wasDisconnected()) return;
     if (typeof window === "undefined" || !(window as any).ethereum) return;
     setReconnectAttempted(true);
 
