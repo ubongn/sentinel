@@ -10,6 +10,11 @@ interface SmartAccountUpgradeProps {
 
 type UpgradeStatus = "idle" | "signing" | "submitting" | "confirming" | "success" | "error";
 
+// Pre-delegated demo agents — verified on-chain via EIP-7702
+const DEMO_AGENTS = [
+  { address: "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96", label: "Demo Agent (DeFi Trading)" },
+];
+
 export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccountUpgradeProps) {
   const { provider: walletProvider } = useWallet();
   const [isSmartAccount, setIsSmartAccount] = useState(false);
@@ -55,7 +60,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
 
     setError(null);
 
-    // Step 1: Check if already delegated (instant, no relay needed)
+    // Fast path: already delegated?
     try {
       const active = await isSmartAccountActive(agentAddress);
       if (active) {
@@ -66,7 +71,7 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
       }
     } catch {}
 
-    // Step 2: Try relay endpoint with10s timeout
+    // Try relay with 10s timeout
     try {
       setUpgradeStatus("signing");
       toast.info("Activating EIP-7702 Smart Account...");
@@ -96,7 +101,6 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
 
       setUpgradeStatus("submitting");
       toast.info("TX submitted! Waiting for confirmation...");
-
       await new Promise(resolve => setTimeout(resolve, 8000));
 
       checkDelegation();
@@ -106,64 +110,10 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
     } catch (e: any) {
       console.error("Upgrade failed:", e);
       const msg = e.name === "AbortError"
-        ? "Relay server is offline. Start it with: cd relay && start-relay.bat"
+        ? "Relay offline — use a pre-delegated demo agent to test unbypassable mode."
         : e.message || "Upgrade failed";
       setError(msg);
       setUpgradeStatus("error");
-      toast.error(msg);
-    }
-  }
-
-  async function handleRemoveDelegation() {
-    if (!walletProvider) {
-      toast.error("Connect your wallet first");
-      return;
-    }
-
-    try {
-      setUpgradeStatus("signing");
-      toast.info("Removing EIP-7702 delegation...");
-
-      const RELAY_URL = import.meta.env.VITE_RELAY_URL || "/api/delegate";
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(RELAY_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentAddress, remove: true }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-
-      if (!response.ok) {
-        const text = await response.text();
-        let errorMsg = "Failed to remove delegation";
-        try { errorMsg = JSON.parse(text).error || errorMsg; } catch {}
-        throw new Error(errorMsg);
-      }
-
-      await response.json();
-
-      setUpgradeStatus("submitting");
-      toast.info("TX submitted! Waiting for confirmation...");
-
-      await new Promise(resolve => setTimeout(resolve, 8000));
-
-      checkDelegation();
-      setUpgradeStatus("idle");
-      toast.success("Delegation removed. Agent reverted to opt-in mode.");
-
-    } catch (e: any) {
-      console.error("Remove delegation failed:", e);
-      const msg = e.name === "AbortError"
-        ? "Relay server is offline. Start it with: cd relay && start-relay.bat"
-        : e.message || "Failed to remove delegation";
-      setError(msg);
-      setUpgradeStatus("error");
-      toast.error(msg);
     }
   }
 
@@ -191,13 +141,6 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
               <span className="detail-label">Delegated to:</span>
               <code className="detail-value">{delegationTarget?.slice(0, 10)}...{delegationTarget?.slice(-8)}</code>
             </div>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={handleRemoveDelegation}
-              disabled={upgradeStatus === "signing" || upgradeStatus === "submitting" || upgradeStatus === "confirming"}
-            >
-              Remove Delegation
-            </button>
           </div>
         ) : (
           <div className="delegation-inactive">
@@ -209,7 +152,11 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
               Agent can bypass Sentinel by calling contracts directly. Upgrade to make guardrails unbypassable.
             </p>
 
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+              <div className="error-message" style={{ marginBottom: 12 }}>
+                {error}
+              </div>
+            )}
 
             <button
               className="btn btn-primary"
@@ -222,13 +169,54 @@ export function SmartAccountUpgrade({ agentAddress, onStatusChange }: SmartAccou
                "Make Agent Unbypassable"}
             </button>
 
-            <div className="upgrade-note">
+            <div className="upgrade-note" style={{ marginTop: 16 }}>
               <strong>How it works:</strong> Signs an EIP-7702 delegation authorization. Your agent's EOA will execute SentinelAccount's code — every transaction goes through guardrail checks automatically.
             </div>
 
             <div className="monad-note">
               <strong>Monad EIP-7702:</strong> Delegated accounts must maintain ≥10 MON reserve balance.
             </div>
+
+            {/* Demo agents section */}
+            {DEMO_AGENTS.length > 0 && (
+              <div style={{
+                marginTop: 20,
+                padding: "16px",
+                background: "rgba(124, 58, 237, 0.08)",
+                borderRadius: 8,
+                border: "1px solid rgba(124, 58, 237, 0.2)",
+              }}>
+                <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 14 }}>
+                  🧪 Try a Pre-Delegated Agent
+                </div>
+                <p style={{ fontSize: 13, opacity: 0.8, margin: "0 0 12px", lineHeight: 1.5 }}>
+                  These agents are already delegated on-chain. Register them to see "No-Bypass Active" in action.
+                </p>
+                {DEMO_AGENTS.map(agent => (
+                  <div key={agent.address} style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 12px",
+                    background: "rgba(0,0,0,0.2)",
+                    borderRadius: 6,
+                    marginBottom: 6,
+                    fontSize: 13,
+                  }}>
+                    <span style={{ fontWeight: 500 }}>{agent.label}:</span>
+                    <code style={{ fontSize: 12, opacity: 0.7 }}>
+                      {agent.address.slice(0, 8)}...{agent.address.slice(-6)}
+                    </code>
+                    <span style={{
+                      marginLeft: "auto",
+                      fontSize: 11,
+                      color: "#4ade80",
+                      fontWeight: 600,
+                    }}>✅ Delegated</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

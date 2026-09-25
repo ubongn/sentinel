@@ -8,7 +8,8 @@ interface WalletProviderInfo {
 
 /**
  * Wallet Connect Button with EIP-6963 multi-wallet detection.
- * Auto-reconnects on page refresh using saved wallet RDNS.
+ * Works with ANY wallet — MetaMask, OKX, Coinbase, Rabby, etc.
+ * Falls back to window.ethereum for wallets that don't support EIP-6963.
  */
 export function ConnectButton() {
   const { address, setWallet, disconnect, savedRdns } = useWallet();
@@ -37,14 +38,13 @@ export function ConnectButton() {
     };
   }, []);
 
-  // Auto-reconnect on page refresh: find saved wallet and reconnect
+  // Auto-reconnect on page refresh
   useEffect(() => {
     if (address || reconnectAttempted || !savedRdns || wallets.length === 0) return;
     setReconnectAttempted(true);
 
     const saved = wallets.find(w => w.info.rdns === savedRdns);
     if (saved) {
-      // Try silent reconnect (eth_accounts — no popup)
       saved.provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
         if (accounts?.length > 0) {
           setWallet(saved.provider, accounts[0], savedRdns);
@@ -53,7 +53,7 @@ export function ConnectButton() {
     }
   }, [wallets, savedRdns, address, reconnectAttempted, setWallet]);
 
-  // Fallback: check window.ethereum if no EIP-6963 wallets found
+  // Fallback: window.ethereum for non-EIP-6963 wallets
   useEffect(() => {
     if (address || reconnectAttempted || wallets.length > 0) return;
     if (typeof window === "undefined" || !(window as any).ethereum) return;
@@ -105,17 +105,18 @@ export function ConnectButton() {
   }
 
   async function connectFallback() {
-    if (typeof window === "undefined" || !(window as any).ethereum) {
-      alert("No wallet detected. Install MetaMask, OKX, or Coinbase Wallet.");
+    const eth = (window as any).ethereum;
+    if (!eth) {
+      alert("No wallet detected. Install MetaMask, OKX, Coinbase Wallet, or any EVM wallet.");
       return;
     }
     setConnecting(true);
     setShowSelector(false);
     try {
-      await switchToMonad((window as any).ethereum);
-      const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+      await switchToMonad(eth);
+      const accounts = await eth.request({ method: "eth_requestAccounts" });
       if (accounts?.length > 0) {
-        setWallet((window as any).ethereum, accounts[0]);
+        setWallet(eth, accounts[0]);
       }
     } catch (err: any) {
       console.error("Connection failed:", err);
@@ -141,38 +142,58 @@ export function ConnectButton() {
     );
   }
 
-  // Wallet selector dropdown
+  // No wallets detected via EIP-6963 — show single connect button
+  if (wallets.length === 0) {
+    return (
+      <button
+        className="connect-btn"
+        onClick={connectFallback}
+        disabled={connecting}
+      >
+        {connecting ? "Connecting..." : "Connect Wallet"}
+      </button>
+    );
+  }
+
+  // Wallets detected — show selector
   return (
     <div style={{ position: "relative" }}>
       <button
         className="connect-btn"
-        onClick={() => wallets.length > 0 ? setShowSelector(!showSelector) : connectFallback()}
+        onClick={() => setShowSelector(!showSelector)}
         disabled={connecting}
       >
         {connecting ? "Connecting..." : "Connect Wallet"}
       </button>
 
       {showSelector && (
-        <div className="wallet-selector">
-          {wallets.map((wallet) => (
-            <button
-              key={wallet.info.uuid}
-              className="wallet-option"
-              onClick={() => connectWallet(wallet)}
-            >
-              {wallet.info.icon ? (
-                <img src={wallet.info.icon} alt={wallet.info.name} width={24} height={24} />
-              ) : (
-                <span className="wallet-icon-placeholder" />
-              )}
-              <span>{wallet.info.name}</span>
+        <>
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 999 }}
+            onClick={() => setShowSelector(false)}
+          />
+          <div className="wallet-selector" style={{ position: "absolute", top: "100%", right: 0, zIndex: 1000, marginTop: 4 }}>
+            {wallets.map((wallet) => (
+              <button
+                key={wallet.info.uuid}
+                className="wallet-option"
+                onClick={() => connectWallet(wallet)}
+              >
+                {wallet.info.icon ? (
+                  <img src={wallet.info.icon} alt={wallet.info.name} width={24} height={24} />
+                ) : (
+                  <span className="wallet-icon-placeholder" />
+                )}
+                <span>{wallet.info.name}</span>
+              </button>
+            ))}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "4px 0" }} />
+            <button className="wallet-option wallet-option-fallback" onClick={connectFallback}>
+              <span className="wallet-icon-placeholder" />
+              <span>Other Wallet</span>
             </button>
-          ))}
-          <button className="wallet-option wallet-option-fallback" onClick={connectFallback}>
-            <span className="wallet-icon-placeholder" />
-            <span>Browser Wallet</span>
-          </button>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
