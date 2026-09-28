@@ -49,7 +49,7 @@ export function ActivityFeed() {
             value,
           };
         }
-        if (ev.fragment?.name === "TransactionBlocked") {
+        if (ev.fragment?.name === "TransactionRejected") {
           return {
             ...base,
             type: "Transaction Blocked",
