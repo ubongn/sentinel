@@ -173,13 +173,14 @@ export function useSentinel() {
     const currentBlock = await provider.getBlockNumber();
     const startBlock = Math.max(0, currentBlock + fromBlock);
 
-    const [txEvents, agentEvents, pauseEvents] = await Promise.all([
+    const [txEvents, txBlocked, agentEvents, pauseEvents] = await Promise.all([
       guard.queryFilter(guard.filters.TransactionExecuted(), startBlock, currentBlock),
+      guard.queryFilter(guard.filters.TransactionRejected(), startBlock, currentBlock),
       registry.queryFilter(registry.filters.AgentRegistered(), startBlock, currentBlock),
       guard.queryFilter(guard.filters.AgentPaused(), startBlock, currentBlock),
     ]);
 
-    const allEvents = [...txEvents, ...agentEvents, ...pauseEvents]
+    const allEvents = [...txEvents, ...txBlocked, ...agentEvents, ...pauseEvents]
       .sort((a, b) => (b.blockNumber || 0) - (a.blockNumber || 0))
       .slice(0, 50);
 
