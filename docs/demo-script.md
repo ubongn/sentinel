@@ -31,7 +31,7 @@
 ## Slide 5: Monad Primitives (1:20 - 1:40)
 **[Show: Monad primitives slide]**
 
-> "We built this on Monad's unique primitives. P256 precompile for passkey-based policy authorization — no seed phrases. ERC-8004 for trustless on-chain agent registry. And BTX encrypted mempools so your guardrail config stays private."
+> "I built this on Monad's unique primitives. P256 precompile for passkey-based policy authorization — no seed phrases. ERC-8004 for trustless on-chain agent registry. And BTX encrypted mempools so your guardrail config stays private."
 
 ---
 
@@ -60,7 +60,7 @@
 ## Slide 7: Bounties (2:20 - 2:40)
 **[Show: Bounties slide]**
 
-> "We integrated 5 bounties — not just imports, real integrations. Dynamic SDK for wallet connection. Mera passkey for biometric policy auth. Chainlink CRE for automated circuit breaks. Qwen 3.8 Max for an AI assistant that converts natural language to policies. And Cleanverse for identity verification."
+> "I integrated 5 bounties — not just imports, real integrations. Dynamic SDK for wallet connection. Mera passkey for biometric policy auth. Chainlink CRE for automated circuit breaks. Qwen 3.8 Max for an AI assistant that converts natural language to policies. And Cleanverse for identity verification."
 
 ---
 
