@@ -3,6 +3,7 @@ import { useSentinel } from "../hooks/useSentinel";
 import { MONAD_EXPLORER } from "../config/contracts";
 import { PasskeyAuth } from "../components/PasskeyAuth";
 import { CleanverseVerification } from "../components/CleanverseVerification";
+import { ReputationCheck } from "../components/ReputationCheck";
 import { SmartAccountUpgrade } from "../components/SmartAccountUpgrade";
 import { toast } from "sonner";
 
@@ -117,6 +118,9 @@ export function AgentManagement() {
                     setCleanverseVerified(score >= 50);
                   }}
                 />
+              </div>
+              <div style={{ marginBottom: "24px" }}>
+                <ReputationCheck walletAddress={agentAddress} />
               </div>
               <div>
                 <PasskeyAuth onSuccess={() => setPasskeyRegistered(true)} />
