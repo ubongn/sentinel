@@ -176,6 +176,35 @@ cd frontend && npm run build
 
 ---
 
+## External Libraries & Attribution
+
+This project uses the following open-source libraries and services:
+
+| Library / Service | License | Purpose |
+|---|---|---|
+| [ethers.js](https://github.com/ethers-io/ethers) | MIT | Ethereum interactions |
+| [viem](https://github.com/wevm/viem) | MIT | EIP-7702 delegation & type-safe RPC |
+| [React](https://github.com/facebook/react) | MIT | Frontend framework |
+| [Vite](https://github.com/vitejs/vite) | MIT | Build tool |
+| [Hardhat](https://github.com/NomicFoundation/hardhat) | MIT | Smart contract development |
+| [sonner](https://github.com/emilkowalski/sonner) | MIT | Toast notifications |
+| [Cleanverse](https://cleanverse.io) | Proprietary | Agent identity verification (API) |
+| [Dynamic](https://www.dynamic.xyz) | Proprietary | Wallet connection SDK |
+| [Qwen3.8 Max](https://qwen.ai) | Proprietary | AI policy assistant (DashScope API) |
+| [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) | MIT (standard) | On-chain agent registry pattern |
+| [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) | MIT (standard) | Smart account delegation |
+| [EIP-7212](https://eips.ethereum.org/EIPS/eip-7212) | MIT (standard) | P256 precompile for passkeys |
+
+The `ERC-8004` registry pattern is based on the ERC-8004 standard specification. Smart contract guardrail logic is original work written for this hackathon.
+
+---
+
+## AI Coding Tools Disclosure
+
+Per Metropolis Hackathon submission requirements: this project was built with assistance from AI coding tools, including large language models for code generation, debugging, and documentation. All AI-generated code was reviewed, tested, and integrated by the project author. The smart contract logic, architecture design, and product decisions were made by the author.
+
+---
+
 ## License
 
 MIT
