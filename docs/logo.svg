@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0512512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D0221;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1A0A3E;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#6D28D9;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <!-- Shield shape -->
+  <path d="M25680 L400140 L400280 Q400360 340420 Q256460 112420 Q112360 112280 L112140 Z" fill="url(#shield)" filter="url(#glow)" opacity="0.95"/>
+
+  <!-- Shield inner border -->
+  <path d="M256100 L385152 L385276 Q385345 336256446 Q256446 127446 Q127364 127276 L127152 Z" fill="none" stroke="url(#accent)" stroke-width="3" opacity="0.6"/>
+
+  <!-- Guard check mark (Sentinel = verified/protected) -->
+  <path d="M190265 L240315 L330205" fill="none" stroke="#FFFFFF" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Small lock icon at bottom -->
+  <rect x="236" y="370" width="40" height="50" rx="6" fill="url(#accent)" opacity="0.9"/>
+  <path d="M244370 L244355 Q244335 256335 Q268335 268355 L268370" fill="none" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Dots pattern (blockchain nodes) -->
+  <circle cx="140" cy="440" r="4" fill="#8B5CF6" opacity="0.4"/>
+  <circle cx="170" cy="440" r="4" fill="#8B5CF6" opacity="0.5"/>
+  <circle cx="200" cy="440" r="4" fill="#8B5CF6" opacity="0.6"/>
+  <circle cx="312" cy="440" r="4" fill="#8B5CF6" opacity="0.6"/>
+  <circle cx="342" cy="440" r="4" fill="#8B5CF6" opacity="0.5"/>
+  <circle cx="372" cy="440" r="4" fill="#8B5CF6" opacity="0.4"/>
+
+  <!-- "SENTINEL" text -->
+  <text x="256" y="490" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="48" fill="#E9D5FF" letter-spacing="12">SENTINEL</text>
+</svg>
