@@ -81,8 +81,8 @@ export function ReputationCheck({ walletAddress, onChecked }: ReputationCheckPro
 
       {status === "done" && agents.length === 0 && (
         <p style={{ fontSize: "13px", marginTop: 12 }}>
-          No rated agents under this address. That is the normal case: 84 of 10,260 registered
-          agents have ever been rated, so there is nothing to judge here either way.
+          No rated agents under this address. That is the normal case: most registered agents
+          have never been rated, so there is nothing to judge here either way.
         </p>
       )}
 
