@@ -5,6 +5,7 @@ import { PasskeyAuth } from "../components/PasskeyAuth";
 import { CleanverseVerification } from "../components/CleanverseVerification";
 import { ReputationCheck } from "../components/ReputationCheck";
 import { SmartAccountUpgrade } from "../components/SmartAccountUpgrade";
+import { AgentMetadataVault } from "../components/AgentMetadataVault";
 import { toast } from "sonner";
 
 export function AgentManagement() {
@@ -79,6 +80,9 @@ export function AgentManagement() {
               {result.slice(0, 18)}...
             </a>
           </p>
+          {action === "register" && (
+            <AgentMetadataVault agentAddress={agentAddress} metadata={metadata} txHash={result} />
+          )}
           <button className="btn btn-secondary" style={{ marginTop: "16px" }} onClick={() => setResult(null)}>Continue</button>
         </div>
       ) : action === "smart-account" ? (

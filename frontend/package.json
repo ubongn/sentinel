@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@category-labs/mera": "^0.2.0",
     "@dynamic-labs/ethereum": "^5.9.0",
     "@dynamic-labs/sdk-react-core": "^5.9.0",
     "ethers": "^6.17.0",
