@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWallet, wasDisconnected } from "../context/WalletContext";
+import { MONAD_RPC } from "../config/contracts";
 
 interface WalletProviderInfo {
   info: { uuid: string; name: string; icon: string; rdns: string };
@@ -82,7 +83,7 @@ export function ConnectButton() {
             chainId: "0x279F",
             chainName: "Monad Testnet",
             nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
-            rpcUrls: ["https://testnet-rpc.monad.xyz"],
+            rpcUrls: [MONAD_RPC],
             blockExplorerUrls: ["https://monad-testnet.socialscan.io"],
           }],
         });
