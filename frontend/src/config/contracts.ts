@@ -7,7 +7,7 @@ export const CONTRACTS = {
 };
 
 export const MONAD_CHAIN_ID = 10143;
-export const MONAD_RPC = "https://testnet-rpc.monad.xyz";
+export const MONAD_RPC = "https://monad-testnet.g.alchemy.com/v2/alch_CSRi42oZaDJCd0xdx6bGy";
 export const MONAD_EXPLORER = "https://monad-testnet.socialscan.io";
 
 export const DYNAMIC_ENVIRONMENT_ID = import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID || "";
