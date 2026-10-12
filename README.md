@@ -188,7 +188,7 @@ This project uses the following open-source libraries and services:
 | [Vite](https://github.com/vitejs/vite) | MIT | Build tool |
 | [Hardhat](https://github.com/NomicFoundation/hardhat) | MIT | Smart contract development |
 | [sonner](https://github.com/emilkowalski/sonner) | MIT | Toast notifications |
-| [Cleanverse](https://cleanverse.io) | Proprietary | Agent identity verification (API) |
+| [Cleanverse](https://cleanverse.io) | Proprietary | Agent identity verification (CVI gate) |
 | [Dynamic](https://www.dynamic.xyz) | Proprietary | Wallet connection SDK |
 | [Qwen3.8 Max](https://qwen.ai) | Proprietary | AI policy assistant (DashScope API) |
 | [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) | MIT (standard) | On-chain agent registry pattern |
