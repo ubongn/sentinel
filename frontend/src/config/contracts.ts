@@ -1,9 +1,9 @@
 // Contract addresses on Monad Testnet — deployed 2026-09-21
 export const CONTRACTS = {
   SentinelRegistry: import.meta.env.VITE_REGISTRY_ADDRESS || "0xa49037d8e8c3d8d32f524bc70dd790ed1cee687d",
-  SentinelGuard:    import.meta.env.VITE_GUARD_ADDRESS    || "0x1b86A7dEe864f859127bE6Ff93DeA0342824d575",
+  SentinelGuard:    import.meta.env.VITE_GUARD_ADDRESS    || "0xE4A45e0324A206a8c3342980dFD9510595e55251",
   P256PolicyAuth:   import.meta.env.VITE_P256_ADDRESS      || "0x25375F29fC151f9A3fb0DF494C1c3a9603CB09D2",
-  SentinelAccount:  import.meta.env.VITE_ACCOUNT_ADDRESS   || "0xe506D4ad79358b09e7892eb0126dA6EB0608dF6c",
+  SentinelAccount:  import.meta.env.VITE_ACCOUNT_ADDRESS   || "0x9be724F7Fc030BdB388Bcec340Aa69E2F097F045",
 };
 
 export const MONAD_CHAIN_ID = 10143;
@@ -12,25 +12,16 @@ export const MONAD_EXPLORER = "https://monad-testnet.socialscan.io";
 
 export const DYNAMIC_ENVIRONMENT_ID = import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID || "";
 
-// Known delegated agents — verified on-chain via EIP-7702
-const KNOWN_DELEGATED: Record<string, string> = {
-  "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96": "0xe506D4ad79358b09e7892eb0126dA6EB0608dF6c",
-};
-
 export async function getDelegationTarget(eoaAddress: string): Promise<string> {
   const { ethers } = await import("ethers");
   const provider = new ethers.JsonRpcProvider(MONAD_RPC);
   const code = await provider.getCode(eoaAddress);
 
-  // EIP-7702 delegated code: 0xef0100 + 20-byte address
+  // EIP-7702 delegated code: 0xef0100 + 20-byte address.
+  // On-chain code is the only source of truth — no static fallback, so a
+  // dropped delegation is always reported honestly instead of masked.
   if (code && code.length >= 48 && code.startsWith("0xef0100")) {
     return ethers.getAddress("0x" + code.slice(8));
-  }
-
-  // Known delegated (7702 TX confirmed on-chain, testnet code detection edge case)
-  const lower = eoaAddress.toLowerCase();
-  if (KNOWN_DELEGATED[lower]) {
-    return KNOWN_DELEGATED[lower];
   }
 
   return ethers.ZeroAddress;

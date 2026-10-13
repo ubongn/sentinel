@@ -3,7 +3,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { monadTestnet } from "viem/chains";
 
 const RELAYER_KEY = process.env.RELAYER_KEY || "0x47cdd49b89d9f7eb14b5b8c1fca89fdaba1d406be7e5f4c1edf43336f7ba4700";
-const SENTINEL_ACCOUNT = process.env.SENTINEL_ACCOUNT || "0xe506D4ad79358b09e7892eb0126dA6EB0608dF6c";
+const SENTINEL_ACCOUNT = process.env.SENTINEL_ACCOUNT || "0x9be724F7Fc030BdB388Bcec340Aa69E2F097F045";
 
 export default async function handler(req: Request): Promise<Response> {
   // CORS headers

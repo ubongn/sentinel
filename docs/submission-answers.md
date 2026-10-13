@@ -43,11 +43,11 @@
 
 5. **Upgrade to Smart Account (EIP-7702):** Go to "Smart Account." Click "Upgrade." Sign the EIP-7702 delegation transaction. Once confirmed, the agent's EOA becomes the SentinelAccount — it can no longer bypass guardrails. The UI will show "No-Bypass Active."
 
-6. **Watch the Activity Feed:** Go to "Activity." You'll see real on-chain events: policy creation, agent registration, policy assignment, and any blocked transactions with their reasons (SpendingLimitExceeded, NotWhitelisted, CircuitBreakTriggered).
+6. **Watch the Activity Feed:** Go to "Activity." You'll see real on-chain events with block timestamps and working explorer links: agent registration, policy creation, policy assignment, executed transactions and pause/unpause actions. (Rejected transactions revert on-chain, so they leave no log entry — you'll see them directly in step 7.)
 
 7. **Test a blocked transaction:** Create a policy with a low spending limit (e.g.,0.1 MON). Try to execute a transaction above that limit through SentinelGuard. It will revert on-chain — the guardrail works.
 
-**No testnet MON needed for viewing.** All demo data and on-chain transactions are already live on Monad Testnet.
+**No testnet MON needed for viewing.** All demo transactions are already live on Monad Testnet.
 
 ---
 
@@ -107,11 +107,11 @@ Dynamic is the foundation of Sentinel's onboarding. Without it, connecting a wal
 
 Alchemy serves as Sentinel's primary RPC provider for Monad Testnet interactions:
 
-1. **Contract calls:** All read operations (querying agent status, policy details, on-chain events) route through Alchemy's Monad Testnet RPC endpoint. The Activity Feed's event queries use Alchemy's infrastructure to fetch logs efficiently.
+1. **Contract calls:** All read operations (querying agent status, policy details, delegation status, on-chain state behind the Activity Feed) route through Alchemy's Monad Testnet RPC endpoint.
 
 2. **Transaction submissions:** Policy creation, agent registration, policy assignment, and EIP-7702 delegation transactions are all submitted through Alchemy's RPC.
 
-3. **Event indexing:** The Activity Feed uses Alchemy's RPC to query SentinelGuard and SentinelRegistry contract events (TransactionExecuted, TransactionRejected, AgentRegistered, PolicyCreated) over recent block ranges.
+3. **Event indexing:** The Activity Feed fetches SentinelGuard and SentinelRegistry logs in provider-sized chunks, so per-provider block-range limits (the same constraint that applies to Alchemy's free tier) can never silently blank the feed — Alchemy serves as the automatic fallback log source and powers every state read behind it.
 
 4. **Reliability:** Alchemy's uptime and request handling ensure the Activity Feed loads reliably during demos and real usage, even with concurrent users querying events.
 

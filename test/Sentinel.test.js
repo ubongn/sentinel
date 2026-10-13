@@ -83,7 +83,7 @@ describe("Sentinel", function () {
       const policyId = 1n;
       await guard.connect(owner).setPolicyForAgent(agent.address, policyId);
       await owner.sendTransaction({ to: await guard.getAddress(), value: ethers.parseEther("10") });
-      const execTx = await guard.connect(agentOwner).executeWithGuardrails(agent.address, target.address, ethers.parseEther("0.1"), "0x");
+      const execTx = await guard.connect(agent).executeWithGuardrails(agent.address, target.address, ethers.parseEther("0.1"), "0x");
       expect((await execTx.wait()).status).to.equal(1);
     });
 
@@ -91,7 +91,7 @@ describe("Sentinel", function () {
       await guard.connect(owner).createPolicy(ethers.parseEther("0.1"), ethers.parseEther("1"), 86400, 0, 0, 0, []);
       await guard.connect(owner).setPolicyForAgent(agent.address, 1n);
       await expect(
-        guard.connect(agentOwner).executeWithGuardrails(agent.address, target.address, ethers.parseEther("1"), "0x")
+        guard.connect(agent).executeWithGuardrails(agent.address, target.address, ethers.parseEther("1"), "0x")
       ).to.be.revertedWithCustomError(guard, "SpendLimitExceeded");
     });
 
@@ -100,11 +100,11 @@ describe("Sentinel", function () {
       await guard.connect(owner).setPolicyForAgent(agent.address, 1n);
       await guard.connect(owner).pauseAgent(agent.address);
       await expect(
-        guard.connect(agentOwner).executeWithGuardrails(agent.address, target.address, 1, "0x")
+        guard.connect(agent).executeWithGuardrails(agent.address, target.address, 1, "0x")
       ).to.be.revertedWithCustomError(guard, "AgentIsPaused");
       await guard.connect(owner).unpauseAgent(agent.address);
       await owner.sendTransaction({ to: await guard.getAddress(), value: ethers.parseEther("1") });
-      const tx = await guard.connect(agentOwner).executeWithGuardrails(agent.address, target.address, 1, "0x");
+      const tx = await guard.connect(agent).executeWithGuardrails(agent.address, target.address, 1, "0x");
       expect((await tx.wait()).status).to.equal(1);
     });
 
@@ -112,11 +112,42 @@ describe("Sentinel", function () {
       await guard.connect(owner).createPolicy(ethers.parseEther("100"), ethers.parseEther("1000"), 86400, 0, 0, 0, [target.address]);
       await guard.connect(owner).setPolicyForAgent(agent.address, 1n);
       await owner.sendTransaction({ to: await guard.getAddress(), value: ethers.parseEther("1") });
-      const tx = await guard.connect(agentOwner).executeWithGuardrails(agent.address, target.address, 1, "0x");
+      const tx = await guard.connect(agent).executeWithGuardrails(agent.address, target.address, 1, "0x");
       expect((await tx.wait()).status).to.equal(1);
       await expect(
-        guard.connect(agentOwner).executeWithGuardrails(agent.address, user.address, 1, "0x")
+        guard.connect(agent).executeWithGuardrails(agent.address, user.address, 1, "0x")
       ).to.be.revertedWithCustomError(guard, "NotWhitelisted");
+    });
+
+    it("should reject execution calls that are not from the agent itself", async function () {
+      await guard.connect(owner).createPolicy(ethers.parseEther("100"), ethers.parseEther("1000"), 86400, 0, 0, 0, []);
+      await guard.connect(owner).setPolicyForAgent(agent.address, 1n);
+      // Third-party callers (even a registered policy owner) must be rejected:
+      // otherwise anyone could spend the agent's quota or spoof its events.
+      await expect(
+        guard.connect(agentOwner).executeWithGuardrails(agent.address, target.address, 1, "0x")
+      ).to.be.revertedWithCustomError(guard, "NotAgent");
+      await expect(
+        guard.connect(user).executeWithGuardrails(agent.address, target.address, 1, "0x")
+      ).to.be.revertedWithCustomError(guard, "NotAgent");
+    });
+
+    it("should block an oversized tx at the circuit-break threshold without persisting a pause", async function () {
+      await guard.connect(owner).createPolicy(
+        ethers.parseEther("1"), ethers.parseEther("100"), 86400, 0, 0, ethers.parseEther("0.25"), []
+      );
+      await guard.connect(owner).setPolicyForAgent(agent.address, 1n);
+      await expect(
+        guard.connect(agent).executeWithGuardrails(agent.address, target.address, ethers.parseEther("0.3"), "0x")
+      ).to.be.revertedWithCustomError(guard, "SpendLimitExceeded");
+      // The threshold check is stateless: no persistent pause is written by
+      // the break, in-limit txs still pass, and the oversized amount stays
+      // blocked on every subsequent attempt.
+      const [okSmall] = await guard.canExecute(agent.address, target.address, ethers.parseEther("0.1"));
+      expect(okSmall).to.equal(true);
+      const [okBig, reason] = await guard.canExecute(agent.address, target.address, ethers.parseEther("0.3"));
+      expect(okBig).to.equal(false);
+      expect(reason).to.equal("circuit_break_threshold");
     });
   });
 

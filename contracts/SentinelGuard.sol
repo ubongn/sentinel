@@ -112,6 +112,7 @@ contract SentinelGuard {
     // ──────────────────────────── Errors ───────────────────────────
 
     error NotAgentOwner(address caller, address agent);
+    error NotAgent(address caller, address agent);
     error AgentNotRegistered(address agent);
     error AgentIsPaused(address agent);
     error AgentNotPaused(address agent);
@@ -307,6 +308,14 @@ contract SentinelGuard {
         uint256 value,
         bytes calldata data
     ) external payable nonReentrant returns (bytes memory) {
+        // 0. Only the agent itself may execute through this entry point.
+        //    In the 7702 flow, SentinelAccount forwards the call with
+        //    agent == address(this) == msg.sender, so legitimate executions
+        //    always pass. Direct third-party calls are rejected: without this
+        //    check anyone could spend the agent's period quota or mint
+        //    spoofed TransactionExecuted events in the agent's name.
+        if (msg.sender != agent) revert NotAgent(msg.sender, agent);
+
         // 1. Verify agent is registered
         SentinelRegistry.AgentInfo memory info = registry.getAgent(agent);
         if (info.owner == address(0)) revert AgentNotRegistered(agent);
@@ -320,11 +329,14 @@ contract SentinelGuard {
         // 3. Circuit break check
         if (ap.paused) revert AgentIsPaused(agent);
 
-        // 4. Auto circuit-break: if single tx exceeds threshold, pause agent
+        // 4. Auto circuit-break: block any single tx above the threshold.
+        //    The threshold check is stateless, so every oversized tx is
+        //    rejected on every attempt. A persistent emergency pause is
+        //    applied separately by the policy owner (pauseAgent) or by
+        //    monitoring automation — it cannot be written inside this frame
+        //    because the revert below rolls back all state and logs here.
         if (p.circuitBreakThreshold > 0 && value > p.circuitBreakThreshold) {
-            ap.paused = true;
             emit CircuitBreakTriggered(agent, value, p.circuitBreakThreshold);
-            emit AgentPaused(agent, "circuit_break_threshold_exceeded");
             revert SpendLimitExceeded(value, p.circuitBreakThreshold);
         }
 

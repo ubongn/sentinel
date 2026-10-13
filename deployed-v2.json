@@ -1,0 +1,12 @@
+{
+  "chainId": 10143,
+  "deployer": "0x2cA51D0cFcfDcE3bbf3d345B45ffa056D55b2f96",
+  "contracts": {
+    "SentinelRegistry": "0xa49037d8e8c3d8d32f524bc70dd790ed1cee687d",
+    "SentinelGuard": "0xe4a45e0324a206a8c3342980dfd9510595e55251",
+    "SentinelAccount": "0x9be724F7Fc030BdB388Bcec340Aa69E2F097F045",
+    "P256PolicyAuth": "0x25375F29fC151f9A3fb0DF494C1c3a9603CB09D2"
+  },
+  "demoPolicyId": 1,
+  "deployedAt": "2026-10-13T04:44:10.781Z"
+}

@@ -95,8 +95,8 @@ Sentinel uses **Monad's native EIP-7702 support** to make guardrails unbypassabl
 | Contract | Address (Monad Testnet) | Purpose |
 |---|---|---|
 | **SentinelRegistry** | `0xa49037d8e8c3d8d32f524bc70dd790ed1cee687d` | ERC-8004 agent registry |
-| **SentinelGuard** | `0x1b86A7dEe864f859127bE6Ff93DeA0342824d575` | Core guardrail engine |
-| **SentinelAccount** | `0xe506D4ad79358b09e7892eb0126dA6EB0608dF6c` | EIP-7702 smart account — no-bypass guardrails |
+| **SentinelGuard** | `0xE4A45e0324A206a8c3342980dFD9510595e55251` | Core guardrail engine |
+| **SentinelAccount** | `0x9be724F7Fc030BdB388Bcec340Aa69E2F097F045` | EIP-7702 smart account — no-bypass guardrails |
 | **P256PolicyAuth** | `0x25375F29fC151f9A3fb0DF494C1c3a9603CB09D2` | Passkey authorization |
 
 **Chain:** Monad Testnet (Chain ID: 10143)  

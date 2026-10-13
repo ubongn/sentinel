@@ -1,12 +1,7 @@
 import { createPublicClient, http } from "viem";
 import { monadTestnet } from "viem/chains";
 
-const SENTINEL_ACCOUNT = "0xe506D4ad79358b09e7892eb0126dA6EB0608dF6c";
-
-// Known delegated agents — verified on-chain via EIP-7702
-const KNOWN_DELEGATED: Record<string, string> = {
-  "0x2ca51d0cfcfdce3bbf3d345b45ffa056d55b2f96": SENTINEL_ACCOUNT,
-};
+const SENTINEL_ACCOUNT = "0x9be724F7Fc030BdB388Bcec340Aa69E2F097F045";
 
 export default async function handler(req: Request): Promise<Response> {
   const headers = {
@@ -49,14 +44,8 @@ export default async function handler(req: Request): Promise<Response> {
         delegated = delegationTarget.toLowerCase() === SENTINEL_ACCOUNT.toLowerCase();
       }
 
-      // Fallback: check known delegated agents
-      if (!delegated) {
-        const lower = address.toLowerCase();
-        if (KNOWN_DELEGATED[lower]) {
-          delegated = true;
-          delegationTarget = KNOWN_DELEGATED[lower];
-        }
-      }
+      // On-chain code is the source of truth; no static fallback — a dropped
+      // delegation must surface as delegated=false, never as a masked "true".
 
       return new Response(
         JSON.stringify({
