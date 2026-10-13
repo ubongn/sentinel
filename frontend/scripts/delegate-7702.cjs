@@ -2,7 +2,8 @@ const { createWalletClient, http } = require("viem");
 const { privateKeyToAccount } = require("viem/accounts");
 const { monadTestnet } = require("viem/chains");
 
-const PRIVATE_KEY = "0x47cdd49b89d9f7eb14b5b8c1fca89fdaba1d406be7e5f4c1edf43336f7ba4700";
+const PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
+if (!PRIVATE_KEY) throw new Error("DEPLOYER_PRIVATE_KEY not set — add it to .env");
 const SENTINEL_ACCOUNT = "0xe506D4ad79358b09e7892eb0126dA6EB0608dF6c";
 
 async function main() {

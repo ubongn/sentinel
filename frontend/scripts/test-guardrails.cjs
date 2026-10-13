@@ -1,6 +1,7 @@
 const { ethers } = require("ethers");
 
-const PRIVATE_KEY = "0x47cdd49b89d9f7eb14b5b8c1fca89fdaba1d406be7e5f4c1edf43336f7ba4700";
+const PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
+if (!PRIVATE_KEY) throw new Error("DEPLOYER_PRIVATE_KEY not set — add it to .env");
 const RPC = "https://testnet-rpc.monad.xyz";
 const GUARD_ADDRESS = "0x1b86A7dEe864f859127bE6Ff93DeA0342824d575";
 

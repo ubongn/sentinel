@@ -2,8 +2,9 @@ const { createWalletClient, http } = require("viem");
 const { privateKeyToAccount } = require("viem/accounts");
 const { monadTestnet } = require("viem/chains");
 
-// This is the relayer key — in production, use a secure key management service
-const RELAYER_KEY = process.env.RELAYER_KEY || "0x47cdd49b89d9f7eb14b5b8c1fca89fdaba1d406be7e5f4c1edf43336f7ba4700";
+// Relayer key comes from the environment — never hardcode it in this repo.
+const RELAYER_KEY = process.env.RELAYER_KEY;
+if (!RELAYER_KEY) throw new Error("RELAYER_KEY not set — add it to .env");
 const SENTINEL_ACCOUNT = process.env.SENTINEL_ACCOUNT || "0xe506D4ad79358b09e7892eb0126dA6EB0608dF6c";
 
 const http_1 = require("http");
